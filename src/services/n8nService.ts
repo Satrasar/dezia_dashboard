@@ -5,8 +5,8 @@ export class N8nService {
 
   constructor() {
     // n8n webhook URL'inizi buraya ekleyin
-    this.webhookUrl = 'https://your-n8n-instance.com/webhook/56c93b71-b493-432c-a7c0-4dea2bd97771';
-    this.baseUrl = 'https://your-n8n-instance.com/api/v1';
+    this.webhookUrl = 'https://ozlemkumtas.app.n8n.cloud/webhook-test/56c93b71-b493-432c-a7c0-4dea2bd97771';
+    this.baseUrl = 'https://ozlemkumtas.app.n8n.cloud/api/v1';
   }
 
   // Kampanya verilerini çek
