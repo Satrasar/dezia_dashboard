@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Bell, Settings, User, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useN8nData } from '../hooks/useN8nData';
 import ThemeToggle from './ThemeToggle';
 
 const Header: React.FC = () => {
   const { logout, user } = useAuth();
   const { isDark } = useTheme();
+  const { lastUpdate, refresh } = useN8nData();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
@@ -70,6 +72,21 @@ const Header: React.FC = () => {
 
         {/* Right */}
         <div className="flex items-center space-x-4">
+          {/* Refresh Button */}
+          <button
+            onClick={refresh}
+            className={`p-2 rounded-lg transition-colors ${
+              isDark 
+                ? 'hover:bg-gray-700 text-gray-300' 
+                : 'hover:bg-gray-100 text-gray-600'
+            }`}
+            title="Verileri Yenile"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+          
           {/* Theme Toggle */}
           <ThemeToggle />
 
@@ -131,6 +148,13 @@ const Header: React.FC = () => {
                   }`}>
                     {user?.email}
                   </p>
+                  {lastUpdate && (
+                    <p className={`text-xs ${
+                      isDark ? 'text-gray-500' : 'text-gray-500'
+                    }`}>
+                      Son güncelleme: {new Date(lastUpdate).toLocaleTimeString('tr-TR')}
+                    </p>
+                  )}
                 </div>
                 <div className="p-2">
                   <button className={`w-full text-left p-2 rounded text-sm transition-colors ${

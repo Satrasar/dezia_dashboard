@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useTheme } from './contexts/ThemeContext';
+import { useN8nData } from './hooks/useN8nData';
 import LoginPage from './components/LoginPage';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -16,6 +17,7 @@ import { Campaign } from './types';
 function App() {
   const { isAuthenticated } = useAuth();
   const { isDark } = useTheme();
+  const { campaigns, kpis, alerts, loading, error, refresh } = useN8nData();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentPage, setCurrentPage] = useState('overview');
   const [filters, setFilters] = useState({
@@ -24,50 +26,6 @@ function App() {
     status: '',
     alertLevel: ''
   });
-  const [campaigns, setCampaigns] = useState<Campaign[]>([
-    {
-      id: 1,
-      name: "Yaz Kampanyası 2024",
-      platform: "facebook",
-      objective: "CONVERSIONS",
-      status: "active",
-      budget: 150.00,
-      spent: 128.50,
-      ctr: 2.10,
-      cpc: 1.85,
-      aiScore: 78,
-      alerts: ["Bütçe kullanımı %85'i geçti"],
-      lastUpdated: new Date()
-    },
-    {
-      id: 2,
-      name: "Mobil Uygulama Tanıtımı",
-      platform: "instagram",
-      objective: "APP_INSTALLS",
-      status: "active",
-      budget: 200.00,
-      spent: 89.25,
-      ctr: 1.80,
-      cpc: 2.10,
-      aiScore: 92,
-      alerts: [],
-      lastUpdated: new Date()
-    },
-    {
-      id: 3,
-      name: "E-ticaret Sonbahar",
-      platform: "facebook",
-      objective: "PURCHASE",
-      status: "paused",
-      budget: 100.00,
-      spent: 95.80,
-      ctr: 1.20,
-      cpc: 2.45,
-      aiScore: 45,
-      alerts: ["Performans skoru kritik seviyede", "Bütçe neredeyse tükendi"],
-      lastUpdated: new Date()
-    }
-  ]);
 
   // Login kontrolü
   if (!isAuthenticated) {
@@ -75,11 +33,10 @@ function App() {
   }
 
   const toggleCampaignStatus = (id: number) => {
-    setCampaigns(prev => prev.map(campaign => 
-      campaign.id === id 
-        ? { ...campaign, status: campaign.status === 'active' ? 'paused' : 'active' }
-        : campaign
-    ));
+    // n8n üzerinden kampanya durumunu değiştir
+    // Bu fonksiyon n8n workflow'una POST request gönderecek
+    console.log('Kampanya durumu değiştiriliyor:', id);
+    // Burada n8n API'sine istek gönderebilirsiniz
   };
 
   const renderCurrentPage = () => {
@@ -131,6 +88,29 @@ function App() {
         
         <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
           <Header />
+          
+          {loading && (
+            <div className="p-6">
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <span className="ml-2">Veriler yükleniyor...</span>
+              </div>
+            </div>
+          )}
+          
+          {error && (
+            <div className="p-6">
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                <strong>Hata:</strong> {error}
+                <button 
+                  onClick={refresh}
+                  className="ml-4 bg-red-500 text-white px-3 py-1 rounded text-sm"
+                >
+                  Tekrar Dene
+                </button>
+              </div>
+            </div>
+          )}
           
           <main className="p-6 space-y-6">
             {renderCurrentPage()}

@@ -1,5 +1,7 @@
 import React from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { campaignService } from '../services/campaignService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { Campaign } from '../types';
 import { X, TrendingUp, Users, Smartphone, Clock } from 'lucide-react';
@@ -10,6 +12,28 @@ interface CampaignDetailModalProps {
 }
 
 const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ campaign, onClose }) => {
+  const [detailedData, setDetailedData] = useState(campaign);
+  const [loading, setLoading] = useState(false);
+
+  // Detaylı veri çek
+  useEffect(() => {
+    const fetchDetailedData = async () => {
+      setLoading(true);
+      try {
+        const detailed = await campaignService.getCampaign(campaign.id.toString());
+        if (detailed) {
+          setDetailedData(detailed);
+        }
+      } catch (error) {
+        console.error('Detaylı veri çekme hatası:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetailedData();
+  }, [campaign.id]);
+
   // Mock data for charts and analytics
   const dailySpendData = [
     { day: 'Pts', spend: 25.30 },
@@ -72,6 +96,13 @@ const CampaignDetailModal: React.FC<CampaignDetailModalProps> = ({ campaign, onC
         </div>
 
         <div className="p-6 space-y-6">
+          {loading && (
+            <div className="flex items-center justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+              <span className="ml-2 text-gray-400">Detaylı veriler yükleniyor...</span>
+            </div>
+          )}
+
           {/* Performance Overview */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Daily Spend Chart */}
