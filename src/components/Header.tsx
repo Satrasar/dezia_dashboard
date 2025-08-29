@@ -179,18 +179,11 @@ const Header: React.FC = () => {
                   >
                     Çıkış Yap
                   </button>
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                </div>
               </div>
             )}
           </div>
         </div>
-        
-        {error && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm max-w-md">
-            <span className="text-red-500">⚠️</span>
-            <span className="truncate" title={error}>{error}</span>
-          </div>
-        )}
       </div>
     </header>
   );
