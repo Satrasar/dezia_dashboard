@@ -68,20 +68,35 @@ export class N8nService {
         responseText = await response.text();
         console.log('n8n ham yanıt:', responseText);
         
-        // Check if response is JSON
-        if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
+        // Check if response is empty or whitespace only
+        if (!responseText || responseText.trim() === '') {
+          console.warn('n8n boş yanıt döndürdü');
+          throw new Error('n8n boş yanıt döndürdü - Workflow aktif mi kontrol edin');
+        }
+
+        // Check if response looks like JSON
+        const trimmedResponse = responseText.trim();
+        if (trimmedResponse.startsWith('{') || trimmedResponse.startsWith('[')) {
           data = JSON.parse(responseText);
+        } else if (trimmedResponse.toLowerCase().includes('html') || trimmedResponse.startsWith('<!')) {
+          console.warn('n8n HTML yanıtı döndürdü:', responseText.substring(0, 200));
+          throw new Error('n8n HTML yanıtı döndürdü - Workflow URL\'i yanlış olabilir');
+        } else if (trimmedResponse.includes('error') || trimmedResponse.includes('Error')) {
+          console.warn('n8n hata mesajı döndürdü:', responseText);
+          throw new Error(`n8n Workflow Hatası: ${responseText.substring(0, 100)}`);
         } else {
-          // If not JSON, check if it's an email response (Gmail API response)
-          if (responseText.includes('"id"') && responseText.includes('"threadId"')) {
-            console.warn('n8n Gmail API yanıtı alındı, kampanya verisi bekleniyor');
-            throw new Error('n8n workflow yanlış yanıt döndürdü - Gmail API yanıtı alındı');
-          }
-          throw new Error('n8n geçersiz JSON yanıtı döndürdü');
+          console.warn('n8n geçersiz format döndürdü:', responseText.substring(0, 200));
+          throw new Error('n8n geçersiz yanıt formatı - JSON bekleniyor ama farklı format alındı');
         }
       } catch (parseError) {
         console.error('JSON parse hatası:', parseError);
-        throw new Error('n8n yanıtı JSON formatında değil');
+        console.error('Ham yanıt:', responseText?.substring(0, 500));
+        
+        if (parseError.message.includes('n8n')) {
+          throw parseError; // Re-throw our custom errors
+        }
+        
+        throw new Error(`n8n yanıtı JSON formatında değil: ${parseError.message}`);
       }
 
       console.log('n8n\'den gelen veri:', data);
