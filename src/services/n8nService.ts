@@ -1,218 +1,142 @@
 // n8n API servisi
 export class N8nService {
-  private baseUrl: string;
-  private webhookUrl: string;
+  private baseUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://ozlemkumtas.app.n8n.cloud';
+  private webhookPath = '/webhook/56c93b71-b493-432c-a7c0-4dea2bd97771';
+  private maxRetries = 2;
+  private retryDelay = 1000;
 
-  constructor() {
-    this.webhookUrl = '/api/n8n';
-    this.baseUrl = 'https://ozlemkumtas.app.n8n.cloud/api/v1';
+  private async delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  // Kampanya verilerini çek
-  private async makeRequest(url: string, options: RequestInit = {}, retries: number = 2) {
+  private async makeRequest(attempt: number = 1): Promise<Response> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        console.log(`n8n API isteği (deneme ${attempt + 1}/${retries + 1}):`, url);
-        
-        const response = await fetch(url, {
-          ...options,
-          signal: controller.signal,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache',
-            ...options.headers,
-          },
-        });
-
-        clearTimeout(timeoutId);
-        return response;
-      } catch (error) {
-        console.error(`n8n API deneme ${attempt + 1} başarısız:`, error);
-        
-        if (attempt === retries) {
-          clearTimeout(timeoutId);
-          if (error.name === 'AbortError') {
-            throw new Error('Request timeout - n8n sunucusu yanıt vermiyor (30 saniye)');
-          }
-          if (error.message.includes('Failed to fetch')) {
-            throw new Error('n8n sunucusuna bağlanılamıyor - Ağ bağlantısı veya CORS sorunu');
-          }
-          throw error;
-        }
-        
-        // Wait before retry (exponential backoff)
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-      }
-    }
-  }
-
-  async getCampaignData() {
     try {
-      console.log('n8n API isteği gönderiliyor:', this.webhookUrl);
-      
-      let data;
-      let responseText;
-      
-      const response = await this.makeRequest(this.webhookUrl, {
+      const response = await fetch(`${this.baseUrl}${this.webhookPath}`, {
         method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
       });
 
-      console.log('n8n API yanıtı:', {
-        status: response.status,
-        statusText: response.statusText,
-        url: response.url,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-
-      if (!response.ok) {
-        try {
-          responseText = await response.text();
-          console.error('n8n hata detayı:', responseText?.substring(0, 500) || 'Boş hata yanıtı');
-        } catch (e) {
-          console.error('Hata detayı okunamadı:', e);
-        }
-        
-        let errorMessage = `n8n API Hatası (${response.status}): ${response.statusText}`;
-        if (response.status === 500) {
-          errorMessage += ' - n8n workflow\'unda hata var. Lütfen n8n dashboard\'dan execution loglarını kontrol edin.';
-        } else if (response.status === 404) {
-          errorMessage += ' - Webhook URL\'i bulunamadı. Workflow aktif mi kontrol edin.';
-        } else if (response.status >= 400 && response.status < 500) {
-          errorMessage += ' - İstek formatı hatalı veya yetkilendirme sorunu.';
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      try {
-        responseText = await response.text();
-        console.log('n8n ham yanıt:', responseText);
-        
-        // Check if response is empty or whitespace only
-        if (!responseText || responseText.trim() === '') {
-          console.warn('n8n boş yanıt döndürdü');
-          // Return a default successful response structure for empty responses
-          return {
-            success: true,
-            data: {
-              campaigns: [],
-              kpis: {},
-              alerts: []
-            },
-            timestamp: new Date().toISOString(),
-            message: 'n8n workflow boş yanıt döndürdü - varsayılan veriler kullanılıyor'
-          };
-        }
-
-        // Check if response looks like JSON
-        const trimmedResponse = responseText.trim();
-        if (trimmedResponse.startsWith('{') || trimmedResponse.startsWith('[')) {
-          data = JSON.parse(responseText);
-        } else if (trimmedResponse.toLowerCase().includes('html') || trimmedResponse.startsWith('<!')) {
-          console.warn('n8n HTML yanıtı döndürdü:', responseText.substring(0, 200));
-          throw new Error('n8n HTML yanıtı döndürdü - Workflow URL\'i yanlış olabilir');
-        } else if (trimmedResponse.includes('error') || trimmedResponse.includes('Error')) {
-          console.warn('n8n hata mesajı döndürdü:', responseText);
-          throw new Error(`n8n Workflow Hatası: ${responseText.substring(0, 100)}`);
-        } else {
-          console.warn('n8n geçersiz format döndürdü:', responseText.substring(0, 200));
-          throw new Error('n8n geçersiz yanıt formatı - JSON bekleniyor ama farklı format alındı');
-        }
-      } catch (parseError) {
-        console.error('JSON parse hatası:', parseError);
-        console.error('Ham yanıt:', responseText?.substring(0, 500));
-        
-        if (parseError.message.includes('n8n')) {
-          throw parseError; // Re-throw our custom errors
-        }
-        
-        throw new Error(`n8n yanıtı JSON formatında değil: ${parseError.message}`);
-      }
-
-      console.log('n8n\'den gelen veri:', data);
-      
-      // n8n array response'unu kontrol et ve düzelt
-      if (Array.isArray(data) && data.length > 0) {
-        // n8n array döndürüyorsa ilk elemanı al
-        data = data[0];
-        console.log('n8n array response düzeltildi:', data);
-      }
-      
-      // n8n response formatını kontrol et
-      if (!data || (!data.success && !data.campaigns)) {
-        console.warn('n8n response formatı beklenmedik:', data);
-        // Eğer direkt kampanya verisi geliyorsa (eski format)
-        if (data && data.campaigns && Array.isArray(data.campaigns)) {
-          return {
-            success: true,
-            data: { 
-              campaigns: data.campaigns,
-              kpis: data.kpis || {},
-              alerts: data.alerts || []
-            },
-            timestamp: new Date().toISOString()
-          };
-        } else {
-          // Completely invalid response, return default structure
-          return {
-            success: true,
-            data: {
-              campaigns: [],
-              kpis: {},
-              alerts: []
-            },
-            timestamp: new Date().toISOString(),
-            message: 'n8n geçersiz yanıt formatı - varsayılan veriler kullanılıyor'
-          };
-        }
-      }
-
-      // n8n'den gelen veriyi React formatına çevir
-      if (data.success && data.campaigns) {
-        return {
-          success: true,
-          data: {
-            campaigns: data.campaigns,
-            kpis: data.kpis || {},
-            alerts: data.alerts || []
-          },
-          timestamp: data.timestamp || new Date().toISOString()
-        };
-      }
-
-      // Validate response structure
-      if (!data || typeof data !== 'object') {
-        throw new Error('n8n geçersiz veri yapısı döndürdü');
-      }
-
-      // Check if it's a Gmail response instead of campaign data
-      if (data.id && data.threadId && data.labelIds) {
-        console.warn('Gmail API yanıtı tespit edildi:', data);
-        throw new Error('n8n workflow yanlış yanıt döndürdü - Gmail API yanıtı alındı');
-      }
-
-      console.log('n8n\'den gelen geçerli veri:', data);
-      return data;
+      clearTimeout(timeoutId);
+      return response;
     } catch (error) {
-      console.error('n8n API hatası:', error);
+      clearTimeout(timeoutId);
       
-      if (error.message.includes('Failed to fetch')) {
-        throw new Error('n8n sunucusuna bağlanılamıyor - CORS veya ağ hatası');
-      } else if (error.message.includes('Gmail API')) {
-        throw new Error('n8n workflow yanlış yanıt döndürdü - Kampanya verisi yerine email yanıtı alındı');
-      } else {
-        throw new Error(`n8n Workflow Hatası: ${error.message}`);
-      }
-      // Ağ hatası mı yoksa n8n workflow hatası mı kontrol et
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('n8n sunucusuna bağlanılamıyor. Lütfen n8n instance\'ının çalıştığından emin olun.');
+      if (attempt < this.maxRetries) {
+        console.log(`n8n istek denemesi ${attempt} başarısız, ${this.retryDelay}ms sonra tekrar denenecek...`);
+        await this.delay(this.retryDelay * attempt);
+        return this.makeRequest(attempt + 1);
       }
       
       throw error;
+    }
+  }
+
+  async getCampaignData(): Promise<N8nResponse> {
+    try {
+      console.log('n8n API çağrısı başlatılıyor...', `${this.baseUrl}${this.webhookPath}`);
+      
+      const response = await this.makeRequest();
+
+      console.log('n8n API yanıt durumu:', response.status);
+      console.log('n8n API yanıt headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        return this.handleErrorResponse(response);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn('n8n API JSON olmayan yanıt döndürdü, fallback veriler kullanılacak');
+        return this.getFallbackData();
+      }
+
+      const rawData = await response.text();
+      console.log('n8n API ham yanıt uzunluğu:', rawData.length);
+
+      if (!rawData || rawData.trim() === '') {
+        console.warn('n8n API boş yanıt döndürdü, fallback veriler kullanılacak');
+        return this.getFallbackData();
+      }
+
+      return this.parseResponse(rawData);
+
+    } catch (error) {
+      console.error('n8n API genel hatası:', error);
+      return this.getFallbackData();
+    }
+  }
+
+  private async handleErrorResponse(response: Response): Promise<N8nResponse> {
+    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    
+    if (response.status === 500) {
+      errorMessage += ' - n8n workflow\'unda hata var. CORS header\'larını ve node yapılandırmasını kontrol edin.';
+    } else if (response.status === 404) {
+      errorMessage += ' - Webhook URL\'i bulunamadı. n8n workflow\'unun aktif olduğundan emin olun.';
+    } else if (response.status === 403) {
+      errorMessage += ' - Erişim reddedildi. n8n workflow izinlerini kontrol edin.';
+    }
+    
+    console.error('n8n API hatası:', errorMessage);
+    return this.getFallbackData();
+  }
+
+  private parseResponse(rawData: string): N8nResponse {
+    try {
+      const parsedData = JSON.parse(rawData);
+      console.log('n8n API başarılı yanıt alındı');
+
+      // n8n array döndürüyorsa ilk elemanı al
+      const data = Array.isArray(parsedData) ? parsedData[0] : parsedData;
+
+      return {
+        success: true,
+        data: {
+          campaigns: data.campaigns || [],
+          kpis: data.kpis || {},
+          alerts: data.alerts || []
+        },
+        alerts: data.alerts || [],
+        timestamp: data.timestamp || new Date().toISOString()
+      };
+    } catch (parseError) {
+      console.error('n8n API yanıt parse hatası:', parseError);
+      return this.getFallbackData();
+    }
+  }
+
+  private getFallbackData(): N8nResponse {
+    console.log('Fallback veriler kullanılıyor...');
+    return {
+      success: false,
+      data: {
+        campaigns: [{
+          id: 'fallback_campaign',
+          name: 'n8n Bağlantısı Bekleniyor...',
+          platform: 'facebook',
+          status: 'UNKNOWN',
+          daily_budget: 0,
+          spent: 0,
+          ctr: 0,
+          cpc: 0,
+          impressions: 0,
+          clicks: 0
+        }],
+        kpis: {},
+        alerts: [{
+          id: 'connection_warning',
+          message: 'n8n workflow bağlantısı kurulamadı. Lütfen n8n dashboard\'ı kontrol edin.',
+          type: 'warning'
+        }]
+      },
+      timestamp: new Date().toISOString()
     }
   }
 

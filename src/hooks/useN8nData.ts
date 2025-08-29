@@ -29,6 +29,10 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
       const response = await n8nService.getCampaignData();
       console.log('n8n servis yanıtı:', response);
       
+      if (!response.success && response.data?.alerts?.length > 0) {
+        console.warn('n8n bağlantı uyarısı:', response.data.alerts[0].message);
+      }
+      
       if (response.success) {
         // n8n'den gelen veriyi React state formatına çevir
         const campaigns: Campaign[] = (response.data?.campaigns || []).map((camp: any) => ({
@@ -61,23 +65,10 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
       }
     } catch (error) {
       console.error('Veri çekme hatası:', error);
-      
-      let userFriendlyError = 'Bilinmeyen hata';
-      
-      if (error instanceof Error) {
-        if (error.message.includes('n8n API Hatası (500)')) {
-          userFriendlyError = 'n8n workflow\'unda hata oluştu. Lütfen n8n dashboard\'undan workflow loglarını kontrol edin.';
-        } else if (error.message.includes('bağlanılamıyor')) {
-          userFriendlyError = 'n8n sunucusuna erişilemiyor. Sunucu durumunu kontrol edin.';
-        } else {
-          userFriendlyError = error.message;
-        }
-      }
-      
       setData(prev => ({
         ...prev,
         loading: false,
-        error: userFriendlyError
+        error: 'n8n bağlantı sorunu - Fallback veriler kullanılıyor'
       }));
     }
   };
