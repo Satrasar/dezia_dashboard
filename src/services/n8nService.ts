@@ -71,7 +71,17 @@ export class N8nService {
         // Check if response is empty or whitespace only
         if (!responseText || responseText.trim() === '') {
           console.warn('n8n boş yanıt döndürdü');
-          throw new Error('n8n boş yanıt döndürdü - Workflow aktif mi kontrol edin');
+          // Return a default successful response structure for empty responses
+          return {
+            success: true,
+            data: {
+              campaigns: [],
+              kpis: {},
+              alerts: []
+            },
+            timestamp: new Date().toISOString(),
+            message: 'n8n workflow boş yanıt döndürdü - varsayılan veriler kullanılıyor'
+          };
         }
 
         // Check if response looks like JSON
@@ -102,14 +112,30 @@ export class N8nService {
       console.log('n8n\'den gelen veri:', data);
       
       // n8n response formatını kontrol et
-      if (!data.success && !data.data) {
+      if (!data || (!data.success && !data.data)) {
         console.warn('n8n response formatı beklenmedik:', data);
         // Eğer direkt kampanya verisi geliyorsa
         if (Array.isArray(data)) {
           return {
             success: true,
-            data: { campaigns: data },
+            data: { 
+              campaigns: data,
+              kpis: {},
+              alerts: []
+            },
             timestamp: new Date().toISOString()
+          };
+        } else {
+          // Completely invalid response, return default structure
+          return {
+            success: true,
+            data: {
+              campaigns: [],
+              kpis: {},
+              alerts: []
+            },
+            timestamp: new Date().toISOString(),
+            message: 'n8n geçersiz yanıt formatı - varsayılan veriler kullanılıyor'
           };
         }
       }

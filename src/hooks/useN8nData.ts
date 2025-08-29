@@ -31,7 +31,7 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
       
       if (response.success) {
         // n8n'den gelen veriyi React state formatına çevir
-        const campaigns: Campaign[] = response.data.campaigns.map((camp: any) => ({
+        const campaigns: Campaign[] = (response.data?.campaigns || []).map((camp: any) => ({
           id: camp.id,
           name: camp.name || '',
           platform: (camp.platform || 'facebook') as 'facebook' | 'instagram',
@@ -48,14 +48,14 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
 
         setData({
           campaigns,
-          kpis: response.data.kpis || {},
-          alerts: response.data.alerts || [],
+          kpis: response.data?.kpis || {},
+          alerts: response.data?.alerts || [],
           loading: false,
           error: null,
           lastUpdate: response.timestamp
         });
       } else {
-        const errorMsg = response.error || response.message || 'n8n workflow başarısız yanıt döndürdü';
+        const errorMsg = response?.error || response?.message || 'n8n workflow başarısız yanıt döndürdü';
         console.error('n8n workflow hatası:', response);
         throw new Error(`n8n Workflow Hatası: ${errorMsg}`);
       }
