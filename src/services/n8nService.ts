@@ -58,6 +58,7 @@ export class N8nService {
           errorDetails = errorText;
         } catch (e) {
           console.error('Hata detayı okunamadı:', e);
+        }
         let errorText;
         try {
           errorText = await response.text();
