@@ -9,7 +9,7 @@ export default defineConfig({
       '/api/n8n': {
         target: 'https://ozlemkumtas.app.n8n.cloud',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/n8n/, '/webhook-test/56c93b71-b493-432c-a7c0-4dea2bd97771'),
+        rewrite: (path) => path.replace(/^\/api\/n8n/, '/webhook/56c93b71-b493-432c-a7c0-4dea2bd97771'),
         secure: true
       }
     }
@@ -18,3 +18,4 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
 });
+
