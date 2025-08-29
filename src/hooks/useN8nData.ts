@@ -45,7 +45,7 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
           spent: camp.spent || 0,
           ctr: (camp.ctr || 0) * 100, // n8n'de decimal, UI'da yüzde
           cpc: camp.cpc || 0,
-          aiScore: camp.ai_score || 0,
+          aiScore: camp.performance_score || camp.ai_score || 50,
           alerts: camp.alert_level === 'critical' ? ['Kritik uyarı var'] : [],
           lastUpdated: camp.last_updated ? new Date(camp.last_updated) : new Date()
         }));

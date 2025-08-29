@@ -11,7 +11,9 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns }) => {
   const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
   const totalSpent = campaigns.reduce((sum, c) => sum + c.spent, 0);
   const averageCTR = campaigns.reduce((sum, c) => sum + c.ctr, 0) / campaigns.length;
-  const averageAiScore = campaigns.reduce((sum, c) => sum + c.aiScore, 0) / campaigns.length;
+  const averageAiScore = campaigns.length > 0 
+    ? campaigns.reduce((sum, c) => sum + c.aiScore, 0) / campaigns.length 
+    : 0;
   const criticalAlerts = campaigns.reduce((sum, c) => sum + c.alerts.length, 0);
 
   const cards = [
