@@ -1,112 +1,78 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Campaign } from '../types';
-import { TrendingUp, Activity, DollarSign, MousePointer, Brain, AlertTriangle } from 'lucide-react';
+import { useN8nData } from '../hooks/useN8nData';
+import KPICards from './KPICards';
+import GoogleAdsStyleCharts from './GoogleAdsStyleCharts';
+import OverviewCharts from './OverviewCharts';
+import FilterSection from './FilterSection';
+import CampaignCards from './CampaignCards';
+import CampaignDetailModal from './CampaignDetailModal';
 
-interface KPICardsProps {
+interface DashboardOverviewProps {
   campaigns: Campaign[];
-  kpis?: any;
+  filters: {
+    search: string;
+    platform: string;
+    status: string;
+    alertLevel: string;
+  };
+  setFilters: (filters: any) => void;
+  onToggleStatus: (id: number) => void;
 }
 
-const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
-  // n8n'den gelen gerçek KPI verilerini kullan, yoksa hesapla
-  const totalCampaigns = kpis?.total_campaigns || campaigns.length;
-  const activeCampaigns = kpis?.active_campaigns || campaigns.filter(c => c.status === 'active').length;
-  const totalSpent = kpis?.total_spent || campaigns.reduce((sum, c) => sum + c.spent, 0);
-  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
-  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
-  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
-  
-  // CTR hesaplama: (clicks / impressions) * 100
-  const averageCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
-  
-  const averageAiScore = campaigns.length > 0 
-    ? campaigns.reduce((sum, c) => sum + c.aiScore, 0) / campaigns.length 
-    : 0;
-  const criticalAlerts = campaigns.reduce((sum, c) => sum + c.alerts.length, 0);
+const DashboardOverview: React.FC<DashboardOverviewProps> = ({ 
+  campaigns, 
+  filters, 
+  setFilters, 
+  onToggleStatus 
+}) => {
+  const { kpis, formattedKpis, loading, error } = useN8nData();
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
-  // Değerleri formatla
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toFixed(0);
+  const handleViewDetails = (campaign: Campaign) => {
+    setSelectedCampaign(campaign);
   };
 
-  const formatCurrency = (num: number) => {
-    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
-    return `₺${num.toFixed(2)}`;
+  const handleCloseModal = () => {
+    setSelectedCampaign(null);
   };
-
-  const cards = [
-    {
-      title: 'Toplam Kampanya',
-      value: totalCampaigns.toString(),
-      icon: TrendingUp,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-500/20',
-      borderColor: 'border-blue-500/30'
-    },
-    {
-      title: 'Aktif Kampanya',
-      value: activeCampaigns.toString(),
-      icon: Activity,
-      color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-500/20',
-      borderColor: 'border-green-500/30'
-    },
-    {
-      title: 'Toplam Maliyet',
-      value: formatCurrency(totalSpent),
-      icon: DollarSign,
-      color: 'from-orange-500 to-orange-600',
-      bgColor: 'bg-orange-500/20',
-      borderColor: 'border-orange-500/30'
-    },
-    {
-      title: 'CTR Oranı',
-      value: `%${averageCTR.toFixed(2)}`,
-      icon: MousePointer,
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-500/20',
-      borderColor: 'border-purple-500/30'
-    },
-    {
-      title: 'AI Performans Skoru',
-      value: `%${Math.round(averageAiScore)}`,
-      icon: Brain,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-500/20',
-      borderColor: 'border-blue-500/30'
-    },
-    {
-      title: 'Kritik Uyarılar',
-      value: criticalAlerts.toString(),
-      icon: AlertTriangle,
-      color: 'from-red-500 to-red-600',
-      bgColor: 'bg-red-500/20',
-      borderColor: 'border-red-500/30'
-    }
-  ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      {cards.map((card, index) => (
-        <div
-          key={index}
-          className={`${card.bgColor} ${card.borderColor} border backdrop-blur-sm rounded-xl p-4 hover:scale-105 transition-all duration-300 cursor-pointer group`}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-300 text-sm font-medium mb-1">{card.title}</p>
-              <p className="text-2xl font-bold text-white">{card.value}</p>
-            </div>
-            <div className={`p-3 rounded-lg bg-gradient-to-r ${card.color} group-hover:scale-110 transition-transform`}>
-              <card.icon className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
+      {/* Google Ads Style Charts - n8n'den gelen gerçek veriler */}
+      <GoogleAdsStyleCharts formattedKpis={formattedKpis} kpis={kpis} />
+
+      {/* KPI Cards */}
+      <KPICards campaigns={campaigns} kpis={kpis} formattedKpis={formattedKpis} />
+
+      {/* Filter Section */}
+      <FilterSection filters={filters} setFilters={setFilters} />
+
+      {/* Overview Charts */}
+      <OverviewCharts campaigns={campaigns} />
+
+      {/* Campaign Cards */}
+      <CampaignCards 
+        campaigns={campaigns} 
+        onToggleStatus={onToggleStatus}
+        onViewDetails={handleViewDetails}
+      />
+
+      {/* Campaign Detail Modal */}
+      {selectedCampaign && (
+        <CampaignDetailModal 
+          campaign={selectedCampaign} 
+          onClose={handleCloseModal}
+        />
+      )}
+    </motion.div>
   );
 };
 
-export default KPICards;
+export default DashboardOverview;
