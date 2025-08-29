@@ -86,12 +86,6 @@ const AutomatedActions: React.FC = () => {
   };
 
   const realtimeStats = getRealtimeStats();
-    setAutomations(prev => prev.map(automation => 
-      automation.id === id 
-        ? { ...automation, status: automation.status === 'active' ? 'paused' : 'active' }
-        : automation
-    ));
-  };
 
   // n8n'den gelen gerçek eylemler
   const getRecentActionsFromN8n = () => {
@@ -145,35 +139,6 @@ const AutomatedActions: React.FC = () => {
       </div>
     );
   }
-    {
-      id: 1,
-      action: 'Bütçe artırıldı',
-      campaign: 'Yaz Kampanyası 2024',
-      time: '2 saat önce',
-      type: 'success'
-    },
-    {
-      id: 2,
-      action: 'Düşük CTR uyarısı',
-      campaign: 'E-ticaret Sonbahar',
-      time: '1 gün önce',
-      type: 'warning'
-    },
-    {
-      id: 3,
-      action: 'Kampanya durduruldu',
-      campaign: 'Mobil Uygulama',
-      time: '2 gün önce',
-      type: 'error'
-    },
-    {
-      id: 4,
-      action: 'Gece modu aktif',
-      campaign: 'Tüm kampanyalar',
-      time: '8 saat önce',
-      type: 'info'
-    }
-  ];
 
   return (
     <motion.div
