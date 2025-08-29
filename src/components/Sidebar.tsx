@@ -1,135 +1,134 @@
 import React from 'react';
-import { 
-  Home, 
-  TrendingUp, 
-  DollarSign, 
-  Target, 
-  Zap, 
-  Brain,
-  BarChart3, 
-  Settings,
-  ChevronLeft,
-  Activity
-} from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import { Campaign } from '../types';
+import { TrendingUp, Activity, DollarSign, MousePointer, Brain, AlertTriangle } from 'lucide-react';
 
-interface SidebarProps {
-  isOpen: boolean;
-  onToggle: () => void;
-  currentPage: string;
-  onPageChange: (page: string) => void;
+interface KPICardsProps {
+  campaigns: Campaign[];
+  kpis?: any;
+  kpis?: any;
+  formattedKpis?: any;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, currentPage, onPageChange }) => {
-  const { isDark } = useTheme();
+const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
+  // n8n'den gelen gerçek KPI verilerini kullan, yoksa hesapla
+  const totalCampaigns = kpis?.total_campaigns || campaigns.length;
+  const activeCampaigns = kpis?.active_campaigns || campaigns.filter(c => c.status === 'active').length;
+  const totalSpent = kpis?.total_spent || campaigns.reduce((sum, c) => sum + c.spent, 0);
+  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
+  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
+  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
+  
+  // CTR hesaplama: (clicks / impressions) * 100
+  const averageCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+  
+  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
+  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
+  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
+  
+  // CTR hesaplama: n8n'den gelen avg_ctr kullan
+  const averageCTR = kpis?.avg_ctr || (totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0);
+  
+  const averageAiScore = kpis?.ai_score_avg || (campaigns.length > 0 
+    ? campaigns.reduce((sum, c) => sum + c.aiScore, 0) / campaigns.length 
+    : 0);
+  const criticalAlerts = kpis?.critical_alerts || campaigns.reduce((sum, c) => sum + c.alerts.length, 0);
 
-  const menuItems = [
-    { icon: Home, label: 'Genel Bakış', page: 'overview' },
-    { icon: DollarSign, label: 'Bütçe Analizi', page: 'budget' },
-    { icon: Target, label: 'Performans Metrikleri', page: 'performance' },
-    { icon: Zap, label: 'Otomatik Eylemler', page: 'automation' },
-    { icon: Brain, label: 'AI Önerileri', page: 'ai-recommendations' },
-    { icon: BarChart3, label: 'Raporlar', page: 'reports' },
-    { icon: Settings, label: 'Ayarlar', page: 'settings' },
+  // Formatlanmış değerleri kullan (n8n'den gelen)
+  const formatNumber = (num: number) => {
+    if (formattedKpis) return num.toString(); // n8n zaten formatlamış
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toFixed(0);
+  };
+
+  const formatCurrency = (num: number) => {
+    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
+    return `₺${num.toFixed(2)}`;
+  };
+
+  // Değerleri formatla
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toFixed(0);
+  };
+
+  const formatCurrency = (num: number) => {
+    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
+    return `₺${num.toFixed(2)}`;
+  };
+
+  const cards = [
+    {
+      title: 'Toplam Kampanya',
+      value: totalCampaigns.toString(),
+      icon: TrendingUp,
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-500/20',
+      borderColor: 'border-blue-500/30'
+    },
+    {
+      title: 'Aktif Kampanya',
+      value: activeCampaigns.toString(),
+      icon: Activity,
+      color: 'from-green-500 to-green-600',
+      bgColor: 'bg-green-500/20',
+      borderColor: 'border-green-500/30'
+    },
+    {
+      title: 'Toplam Maliyet',
+      value: formatCurrency(totalSpent),
+      icon: DollarSign,
+      color: 'from-orange-500 to-orange-600',
+      bgColor: 'bg-orange-500/20',
+      borderColor: 'border-orange-500/30'
+    },
+    {
+      title: 'CTR Oranı',
+      value: `%${averageCTR.toFixed(2)}`,
+      icon: MousePointer,
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-500/20',
+      borderColor: 'border-purple-500/30'
+    },
+    {
+      title: 'AI Performans Skoru',
+      value: `${Math.round(averageAiScore)}`,
+      icon: Brain,
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-500/20',
+      borderColor: 'border-blue-500/30'
+    },
+    {
+      title: 'Kritik Uyarılar',
+      value: criticalAlerts.toString(),
+      icon: AlertTriangle,
+      color: 'from-red-500 to-red-600',
+      bgColor: 'bg-red-500/20',
+      borderColor: 'border-red-500/30'
+    }
   ];
 
   return (
-    <div className={`fixed left-0 top-0 h-full transition-all duration-300 z-50 ${
-      isDark 
-        ? 'bg-gray-800 border-r border-gray-700' 
-        : 'bg-white border-r border-gray-200'
-    } ${
-      isOpen ? 'w-64' : 'w-16'
-    }`}>
-      {/* Header */}
-      <div className={`p-4 border-b ${
-        isDark ? 'border-gray-700' : 'border-gray-200'
-      }`}>
-        <div className="flex items-center justify-between">
-          {isOpen && (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      {cards.map((card, index) => (
+        <div
+          key={index}
+          className={`${card.bgColor} ${card.borderColor} border backdrop-blur-sm rounded-xl p-4 hover:scale-105 transition-all duration-300 cursor-pointer group`}
+        >
+          <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">D</span>
-                </div>
-                <div>
-                  <h1 className={`text-lg font-bold ${
-                    isDark ? 'text-blue-400' : 'text-blue-600'
-                  }`}>
-                    Dezia Digital
-                  </h1>
-                  <p className={`text-xs ${
-                    isDark ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    n8n Otomasyonu ile Güçlendirilmiş
-                  </p>
-                </div>
-              </div>
+              <p className="text-gray-300 text-sm font-medium mb-1">{card.title}</p>
+              <p className="text-2xl font-bold text-white">{card.value}</p>
             </div>
-          )}
-          <button
-            onClick={onToggle}
-            className={`p-2 rounded-lg transition-colors ${
-              isDark 
-                ? 'hover:bg-gray-700 text-gray-300' 
-                : 'hover:bg-gray-100 text-gray-600'
-            }`}
-          >
-            <ChevronLeft 
-              className={`w-5 h-5 transition-transform ${isOpen ? '' : 'rotate-180'}`} 
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* Menu Items */}
-      <nav className="p-4 space-y-2">
-        {menuItems.map((item, index) => (
-          <button
-            key={index}
-            onClick={() => onPageChange(item.page)}
-            className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors group ${
-              currentPage === item.page
-                ? isDark 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-blue-100 text-blue-700'
-                : isDark 
-                  ? 'text-gray-400 hover:bg-gray-700 hover:text-white'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-            }`}
-          >
-            <item.icon className="w-5 h-5" />
-            {isOpen && <span className="text-sm font-medium">{item.label}</span>}
-          </button>
-        ))}
-      </nav>
-
-      {/* Status */}
-      {isOpen && (
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className={`rounded-lg p-3 ${
-            isDark 
-              ? 'bg-green-600/20 border border-green-600/30' 
-              : 'bg-green-50 border border-green-200'
-          }`}>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className={`text-sm font-medium ${
-                isDark ? 'text-green-400' : 'text-green-700'
-              }`}>
-                Otomatik Sistem
-              </span>
+            <div className={`p-3 rounded-lg bg-gradient-to-r ${card.color} group-hover:scale-110 transition-transform`}>
+              <card.icon className="w-6 h-6 text-white" />
             </div>
-            <p className={`text-xs mt-1 ${
-              isDark ? 'text-green-300' : 'text-green-600'
-            }`}>
-              Aktif ve Çalışıyor
-            </p>
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
 };
 
-export default Sidebar;
+export default KPICards;

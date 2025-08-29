@@ -1,192 +1,114 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, Settings, User, ChevronDown } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
-import { useN8nData } from '../hooks/useN8nData';
-import ThemeToggle from './ThemeToggle';
+import React from 'react';
+import { Campaign } from '../types';
+import { TrendingUp, Activity, DollarSign, MousePointer, Brain, AlertTriangle } from 'lucide-react';
 
-const Header: React.FC = () => {
-  const { logout, user } = useAuth();
-  const { isDark } = useTheme();
-  const { lastUpdate, refresh } = useN8nData();
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
+interface KPICardsProps {
+  campaigns: Campaign[];
+  kpis?: any;
+  formattedKpis?: any;
+}
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) => {
+  // n8n'den gelen gerçek KPI verilerini kullan, yoksa hesapla
+  const totalCampaigns = kpis?.total_campaigns || campaigns.length;
+  const activeCampaigns = kpis?.active_campaigns || campaigns.filter(c => c.status === 'active').length;
+  const totalSpent = kpis?.total_spent || campaigns.reduce((sum, c) => sum + c.spent, 0);
+  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
+  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
+  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
+  
+  // CTR hesaplama: n8n'den gelen avg_ctr kullan
+  const averageCTR = kpis?.avg_ctr || (totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0);
+  
+  const averageAiScore = kpis?.ai_score_avg || (campaigns.length > 0 
+    ? campaigns.reduce((sum, c) => sum + c.aiScore, 0) / campaigns.length 
+    : 0);
+  const criticalAlerts = kpis?.critical_alerts || campaigns.reduce((sum, c) => sum + c.alerts.length, 0);
 
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatDateTime = (date: Date) => {
-    const timeStr = date.toLocaleTimeString('tr-TR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    const dateStr = date.toLocaleDateString('tr-TR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-    return { timeStr, dateStr };
+  // Formatlanmış değerleri kullan (n8n'den gelen)
+  const formatNumber = (num: number) => {
+    if (formattedKpis) return num.toString(); // n8n zaten formatlamış
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toFixed(0);
   };
 
-  const { timeStr, dateStr } = formatDateTime(currentTime);
+  const formatCurrency = (num: number) => {
+    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
+    return `₺${num.toFixed(2)}`;
+  };
+
+  const cards = [
+    {
+      title: 'Toplam Kampanya',
+      value: totalCampaigns.toString(),
+      icon: TrendingUp,
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-500/20',
+      borderColor: 'border-blue-500/30'
+    },
+    {
+      title: 'Aktif Kampanya',
+      value: activeCampaigns.toString(),
+      icon: Activity,
+      color: 'from-green-500 to-green-600',
+      bgColor: 'bg-green-500/20',
+      borderColor: 'border-green-500/30'
+    },
+    {
+      title: 'Toplam Maliyet',
+      value: formattedKpis?.cost?.value || formatCurrency(totalSpent),
+      icon: DollarSign,
+      color: 'from-orange-500 to-orange-600',
+      bgColor: 'bg-orange-500/20',
+      borderColor: 'border-orange-500/30'
+    },
+    {
+      title: 'CTR Oranı',
+      value: `%${averageCTR.toFixed(2)}`,
+      icon: MousePointer,
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-500/20',
+      borderColor: 'border-purple-500/30'
+    },
+    {
+      title: 'AI Performans Skoru',
+      value: `${Math.round(averageAiScore)}`,
+      icon: Brain,
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-500/20',
+      borderColor: 'border-blue-500/30'
+    },
+    {
+      title: 'Kritik Uyarılar',
+      value: criticalAlerts.toString(),
+      icon: AlertTriangle,
+      color: 'from-red-500 to-red-600',
+      bgColor: 'bg-red-500/20',
+      borderColor: 'border-red-500/30'
+    }
+  ];
 
   return (
-    <header className={`border-b px-6 py-4 ${
-      isDark 
-        ? 'bg-gray-800 border-gray-700' 
-        : 'bg-white border-gray-200'
-    }`}>
-      <div className="flex items-center justify-between">
-        {/* Left */}
-        <div className="flex items-center space-x-4">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">D</span>
-          </div>
-          <h1 className={`text-xl font-semibold ${
-            isDark ? 'text-white' : 'text-gray-900'
-          }`}>
-            Dezia Ads Dashboard
-          </h1>
-        </div>
-
-        {/* Center - Real-time clock */}
-        <div className="text-center">
-          <div className={`text-2xl font-mono font-bold ${
-            isDark ? 'text-blue-400' : 'text-blue-600'
-          }`}>
-            {timeStr}
-          </div>
-          <div className={`text-sm capitalize ${
-            isDark ? 'text-gray-400' : 'text-gray-600'
-          }`}>
-            {dateStr}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      {cards.map((card, index) => (
+        <div
+          key={index}
+          className={`${card.bgColor} ${card.borderColor} border backdrop-blur-sm rounded-xl p-4 hover:scale-105 transition-all duration-300 cursor-pointer group`}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-300 text-sm font-medium mb-1">{card.title}</p>
+              <p className="text-2xl font-bold text-white">{card.value}</p>
+            </div>
+            <div className={`p-3 rounded-lg bg-gradient-to-r ${card.color} group-hover:scale-110 transition-transform`}>
+              <card.icon className="w-6 h-6 text-white" />
+            </div>
           </div>
         </div>
-
-        {/* Right */}
-        <div className="flex items-center space-x-4">
-          {/* Refresh Button */}
-          <button
-            onClick={refresh}
-            className={`p-2 rounded-lg transition-colors ${
-              isDark 
-                ? 'hover:bg-gray-700 text-gray-300' 
-                : 'hover:bg-gray-100 text-gray-600'
-            }`}
-            title="Verileri Yenile"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-          
-          {/* Theme Toggle */}
-          <ThemeToggle />
-
-          {/* Notifications */}
-          <div className="relative">
-            <button className={`p-2 rounded-lg transition-colors relative ${
-              isDark 
-                ? 'hover:bg-gray-700 text-gray-300' 
-                : 'hover:bg-gray-100 text-gray-600'
-            }`}>
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                3
-              </span>
-            </button>
-          </div>
-
-          {/* Settings */}
-          <button className={`p-2 rounded-lg transition-colors ${
-            isDark 
-              ? 'hover:bg-gray-700 text-gray-300' 
-              : 'hover:bg-gray-100 text-gray-600'
-          }`}>
-            <Settings className="w-5 h-5" />
-          </button>
-
-          {/* User Profile */}
-          <div className="relative">
-            <button
-              onClick={() => setShowUserDropdown(!showUserDropdown)}
-              className={`flex items-center space-x-2 p-2 rounded-lg transition-colors ${
-                isDark 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-gray-100 text-gray-600'
-              }`}
-            >
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
-              </div>
-              <ChevronDown className="w-4 h-4" />
-            </button>
-
-            {showUserDropdown && (
-              <div className={`absolute right-0 top-full mt-2 w-48 rounded-lg shadow-xl z-50 ${
-                isDark 
-                  ? 'bg-gray-800 border border-gray-700' 
-                  : 'bg-white border border-gray-200'
-              }`}>
-                <div className={`p-3 border-b ${
-                  isDark ? 'border-gray-700' : 'border-gray-200'
-                }`}>
-                  <p className={`font-medium ${
-                    isDark ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    {user?.name}
-                  </p>
-                  <p className={`text-sm ${
-                    isDark ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    {user?.email}
-                  </p>
-                  {lastUpdate && (
-                    <p className={`text-xs ${
-                      isDark ? 'text-gray-500' : 'text-gray-500'
-                    }`}>
-                      Son güncelleme: {new Date(lastUpdate).toLocaleTimeString('tr-TR')}
-                    </p>
-                  )}
-                </div>
-                <div className="p-2">
-                  <button className={`w-full text-left p-2 rounded text-sm transition-colors ${
-                    isDark 
-                      ? 'hover:bg-gray-700 text-gray-300' 
-                      : 'hover:bg-gray-100 text-gray-700'
-                  }`}>
-                    Profil
-                  </button>
-                  <button className={`w-full text-left p-2 rounded text-sm transition-colors ${
-                    isDark 
-                      ? 'hover:bg-gray-700 text-gray-300' 
-                      : 'hover:bg-gray-100 text-gray-700'
-                  }`}>
-                    Ayarlar
-                  </button>
-                  <button 
-                    onClick={logout}
-                    className={`w-full text-left p-2 rounded text-sm text-red-400 transition-colors ${
-                      isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    Çıkış Yap
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </header>
+      ))}
+    </div>
   );
 };
 
-export default Header;
+export default KPICards;

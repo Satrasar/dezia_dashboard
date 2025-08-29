@@ -1,124 +1,155 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from './contexts/AuthContext';
-import { useTheme } from './contexts/ThemeContext';
-import { useN8nData } from './hooks/useN8nData';
-import LoginPage from './components/LoginPage';
-import Sidebar from './components/Sidebar';
-import Header from './components/Header';
-import DashboardOverview from './components/DashboardOverview';
-import BudgetAnalysis from './components/BudgetAnalysis';
-import PerformanceMetrics from './components/PerformanceMetrics';
-import AutomatedActions from './components/AutomatedActions';
-import AIRecommendations from './components/AIRecommendations';
-import Reports from './components/Reports';
-import Settings from './components/Settings';
-import { Campaign } from './types';
+import React from 'react';
+import { Campaign } from '../types';
+import { TrendingUp, Activity, DollarSign, MousePointer, Brain, AlertTriangle } from 'lucide-react';
 
-function App() {
-  const { isAuthenticated } = useAuth();
-  const { isDark } = useTheme();
-  const { campaigns, kpis, alerts, loading, error, refresh } = useN8nData();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentPage, setCurrentPage] = useState('overview');
-  const [filters, setFilters] = useState({
-    search: '',
-    platform: '',
-    status: '',
-    alertLevel: ''
-  });
-
-  // Login kontrolü
-  if (!isAuthenticated) {
-    return <LoginPage />;
-  }
-
-  const toggleCampaignStatus = (id: number) => {
-    // n8n üzerinden kampanya durumunu değiştir
-    // Bu fonksiyon n8n workflow'una POST request gönderecek
-    console.log('Kampanya durumu değiştiriliyor:', id);
-    // Burada n8n API'sine istek gönderebilirsiniz
-  };
-
-  const renderCurrentPage = () => {
-    const filteredCampaigns = campaigns.filter(campaign => {
-      const matchesSearch = campaign.name.toLowerCase().includes(filters.search.toLowerCase());
-      const matchesPlatform = filters.platform === '' || campaign.platform === filters.platform;
-      const matchesStatus = filters.status === '' || campaign.status === filters.status;
-      const matchesAlertLevel = filters.alertLevel === '' || 
-        (filters.alertLevel === 'critical' && campaign.alerts.length > 1) ||
-        (filters.alertLevel === 'warning' && campaign.alerts.length === 1) ||
-        (filters.alertLevel === 'normal' && campaign.alerts.length === 0);
-      
-      return matchesSearch && matchesPlatform && matchesStatus && matchesAlertLevel;
-    });
-
-    switch (currentPage) {
-      case 'overview':
-        return <DashboardOverview campaigns={filteredCampaigns} filters={filters} setFilters={setFilters} onToggleStatus={toggleCampaignStatus} />;
-      case 'budget':
-        return <BudgetAnalysis campaigns={filteredCampaigns} />;
-      case 'performance':
-        return <PerformanceMetrics campaigns={filteredCampaigns} />;
-      case 'automation':
-        return <AutomatedActions />;
-      case 'ai-recommendations':
-        return <AIRecommendations campaigns={filteredCampaigns} />;
-      case 'reports':
-        return <Reports campaigns={filteredCampaigns} />;
-      case 'settings':
-        return <Settings />;
-      default:
-        return <DashboardOverview campaigns={filteredCampaigns} filters={filters} setFilters={setFilters} onToggleStatus={toggleCampaignStatus} />;
-    }
-  };
-
-  return (
-    <div className={`min-h-screen transition-colors ${
-      isDark 
-        ? 'bg-gray-900 text-white' 
-        : 'bg-gray-50 text-gray-900'
-    }`}>
-      <div className="flex">
-        <Sidebar 
-          isOpen={sidebarOpen} 
-          onToggle={() => setSidebarOpen(!sidebarOpen)}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-        />
-        
-        <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
-          <Header />
-          
-          {loading && (
-            <div className="p-6">
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <span className="ml-2">Veriler yükleniyor...</span>
-              </div>
-            </div>
-          )}
-          
-          {error && (
-            <div className="p-6">
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                <strong>Hata:</strong> {error}
-                <button 
-                  onClick={refresh}
-                  className="ml-4 bg-red-500 text-white px-3 py-1 rounded text-sm"
-                >
-                  Tekrar Dene
-                </button>
-              </div>
-            </div>
-          )}
-          
-          <main className="p-6 space-y-6">
-            {renderCurrentPage()}
-          </main>
-        </div>
-      </div>
-    </div>
-  );
+interface KPICardsProps {
+  campaigns: Campaign[];
+  kpis?: any;
+  kpis?: any;
+  kpis?: any;
+  formattedKpis?: any;
 }
 
-export default App;
+const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
+  // n8n'den gelen gerçek KPI verilerini kullan, yoksa hesapla
+  const totalCampaigns = kpis?.total_campaigns || campaigns.length;
+  const activeCampaigns = kpis?.active_campaigns || campaigns.filter(c => c.status === 'active').length;
+  const totalSpent = kpis?.total_spent || campaigns.reduce((sum, c) => sum + c.spent, 0);
+  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
+  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
+  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
+  
+  // CTR hesaplama: (clicks / impressions) * 100
+  const averageCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+  
+  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
+  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
+  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
+  
+  // CTR hesaplama: (clicks / impressions) * 100
+  const averageCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+  
+  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
+  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
+  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
+  
+  // CTR hesaplama: n8n'den gelen avg_ctr kullan
+  const averageCTR = kpis?.avg_ctr || (totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0);
+  
+  const averageAiScore = kpis?.ai_score_avg || (campaigns.length > 0 
+    ? campaigns.reduce((sum, c) => sum + c.aiScore, 0) / campaigns.length 
+    : 0);
+  const criticalAlerts = kpis?.critical_alerts || campaigns.reduce((sum, c) => sum + c.alerts.length, 0);
+
+  // Formatlanmış değerleri kullan (n8n'den gelen)
+  const formatNumber = (num: number) => {
+    if (formattedKpis) return num.toString(); // n8n zaten formatlamış
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toFixed(0);
+  };
+
+  const formatCurrency = (num: number) => {
+    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
+    return `₺${num.toFixed(2)}`;
+  };
+
+  // Değerleri formatla
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toFixed(0);
+  };
+
+  const formatCurrency = (num: number) => {
+    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
+    return `₺${num.toFixed(2)}`;
+  };
+
+  // Değerleri formatla
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toFixed(0);
+  };
+
+  const formatCurrency = (num: number) => {
+    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
+    return `₺${num.toFixed(2)}`;
+  };
+
+  const cards = [
+    {
+      title: 'Toplam Kampanya',
+      value: totalCampaigns.toString(),
+      icon: TrendingUp,
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-500/20',
+      borderColor: 'border-blue-500/30'
+    },
+    {
+      title: 'Aktif Kampanya',
+      value: activeCampaigns.toString(),
+      icon: Activity,
+      color: 'from-green-500 to-green-600',
+      bgColor: 'bg-green-500/20',
+      borderColor: 'border-green-500/30'
+    },
+    {
+      title: 'Toplam Maliyet',
+      value: formatCurrency(totalSpent),
+      icon: DollarSign,
+      color: 'from-orange-500 to-orange-600',
+      bgColor: 'bg-orange-500/20',
+      borderColor: 'border-orange-500/30'
+    },
+    {
+      title: 'CTR Oranı',
+      value: `%${averageCTR.toFixed(2)}`,
+          <main className="p-8 space-y-8">
+      icon: MousePointer,
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-500/20',
+      borderColor: 'border-purple-500/30'
+    },
+    {
+      title: 'AI Performans Skoru',
+      value: `${Math.round(averageAiScore)}`,
+      icon: Brain,
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-500/20',
+      borderColor: 'border-blue-500/30'
+    },
+    {
+      title: 'Kritik Uyarılar',
+      value: criticalAlerts.toString(),
+      icon: AlertTriangle,
+      color: 'from-red-500 to-red-600',
+      bgColor: 'bg-red-500/20',
+      borderColor: 'border-red-500/30'
+    }
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      {cards.map((card, index) => (
+        <div
+          key={index}
+          className={`${card.bgColor} ${card.borderColor} border backdrop-blur-sm rounded-xl p-4 hover:scale-105 transition-all duration-300 cursor-pointer group`}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-300 text-sm font-medium mb-2">{card.title}</p>
+              <p className="text-3xl font-bold text-white">{card.value}</p>
+            </div>
+            <div className={`p-4 rounded-xl bg-gradient-to-r ${card.color} group-hover:scale-110 transition-transform shadow-lg`}>
+              <card.icon className="w-7 h-7 text-white" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default KPICards;

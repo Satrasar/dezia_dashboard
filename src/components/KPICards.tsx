@@ -5,14 +5,22 @@ import { TrendingUp, Activity, DollarSign, MousePointer, Brain, AlertTriangle } 
 interface KPICardsProps {
   campaigns: Campaign[];
   kpis?: any;
+  kpis?: any;
   formattedKpis?: any;
 }
 
-const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) => {
+const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
   // n8n'den gelen gerçek KPI verilerini kullan, yoksa hesapla
   const totalCampaigns = kpis?.total_campaigns || campaigns.length;
   const activeCampaigns = kpis?.active_campaigns || campaigns.filter(c => c.status === 'active').length;
   const totalSpent = kpis?.total_spent || campaigns.reduce((sum, c) => sum + c.spent, 0);
+  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
+  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
+  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
+  
+  // CTR hesaplama: (clicks / impressions) * 100
+  const averageCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+  
   const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
   const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
   const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
@@ -28,6 +36,18 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) =
   // Formatlanmış değerleri kullan (n8n'den gelen)
   const formatNumber = (num: number) => {
     if (formattedKpis) return num.toString(); // n8n zaten formatlamış
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toFixed(0);
+  };
+
+  const formatCurrency = (num: number) => {
+    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
+    return `₺${num.toFixed(2)}`;
+  };
+
+  // Değerleri formatla
+  const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toFixed(0);
@@ -57,7 +77,7 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) =
     },
     {
       title: 'Toplam Maliyet',
-      value: formattedKpis?.cost?.value || formatCurrency(totalSpent),
+      value: formatCurrency(totalSpent),
       icon: DollarSign,
       color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-500/20',
@@ -98,11 +118,11 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) =
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-300 text-sm font-medium mb-1">{card.title}</p>
-              <p className="text-2xl font-bold text-white">{card.value}</p>
+              <p className="text-gray-300 text-sm font-medium mb-2">{card.title}</p>
+              <p className="text-3xl font-bold text-white">{card.value}</p>
             </div>
-            <div className={`p-3 rounded-lg bg-gradient-to-r ${card.color} group-hover:scale-110 transition-transform`}>
-              <card.icon className="w-6 h-6 text-white" />
+            <div className={`p-4 rounded-xl bg-gradient-to-r ${card.color} group-hover:scale-110 transition-transform shadow-lg`}>
+              <card.icon className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
