@@ -4,7 +4,6 @@ export class N8nService {
   private webhookUrl: string;
 
   constructor() {
-    // n8n webhook URL'inizi buraya ekleyin
     this.webhookUrl = '/api/n8n';
     this.baseUrl = 'https://ozlemkumtas.app.n8n.cloud/api/v1';
   }
@@ -18,17 +17,18 @@ export class N8nService {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         }
       });
 
       console.log('n8n API yanıtı:', {
         status: response.status,
         statusText: response.statusText,
-        url: response.url
+        url: response.url,
+        headers: Object.fromEntries(response.headers.entries())
       });
 
       if (!response.ok) {
-        // n8n'den gelen hata detaylarını al
         let errorDetails = '';
         try {
           const errorText = await response.text();
@@ -43,6 +43,20 @@ export class N8nService {
 
       const data = await response.json();
       console.log('n8n\'den gelen veri:', data);
+      
+      // n8n response formatını kontrol et
+      if (!data.success && !data.data) {
+        console.warn('n8n response formatı beklenmedik:', data);
+        // Eğer direkt kampanya verisi geliyorsa
+        if (Array.isArray(data)) {
+          return {
+            success: true,
+            data: { campaigns: data },
+            timestamp: new Date().toISOString()
+          };
+        }
+      }
+      
       return data;
     } catch (error) {
       console.error('n8n API hatası:', error);
