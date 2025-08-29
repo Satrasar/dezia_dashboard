@@ -111,17 +111,24 @@ export class N8nService {
 
       console.log('n8n\'den gelen veri:', data);
       
+      // n8n array response'unu kontrol et ve düzelt
+      if (Array.isArray(data) && data.length > 0) {
+        // n8n array döndürüyorsa ilk elemanı al
+        data = data[0];
+        console.log('n8n array response düzeltildi:', data);
+      }
+      
       // n8n response formatını kontrol et
-      if (!data || (!data.success && !data.data)) {
+      if (!data || (!data.success && !data.campaigns)) {
         console.warn('n8n response formatı beklenmedik:', data);
-        // Eğer direkt kampanya verisi geliyorsa
-        if (Array.isArray(data)) {
+        // Eğer direkt kampanya verisi geliyorsa (eski format)
+        if (data && data.campaigns && Array.isArray(data.campaigns)) {
           return {
             success: true,
             data: { 
-              campaigns: data,
-              kpis: {},
-              alerts: []
+              campaigns: data.campaigns,
+              kpis: data.kpis || {},
+              alerts: data.alerts || []
             },
             timestamp: new Date().toISOString()
           };
@@ -138,6 +145,19 @@ export class N8nService {
             message: 'n8n geçersiz yanıt formatı - varsayılan veriler kullanılıyor'
           };
         }
+      }
+
+      // n8n'den gelen veriyi React formatına çevir
+      if (data.success && data.campaigns) {
+        return {
+          success: true,
+          data: {
+            campaigns: data.campaigns,
+            kpis: data.kpis || {},
+            alerts: data.alerts || []
+          },
+          timestamp: data.timestamp || new Date().toISOString()
+        };
       }
 
       // Validate response structure
