@@ -51,7 +51,7 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns }) => {
     },
     {
       title: 'AI Performans Skoru',
-      value: `${Math.round(averageAiScore)}/100`,
+      value: `%${Math.round(averageAiScore)}`,
       icon: Brain,
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-500/20',
