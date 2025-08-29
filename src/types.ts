@@ -11,6 +11,10 @@ export interface Campaign {
   aiScore: number;
   alerts: string[];
   lastUpdated: Date;
+  // Yeni gerçek veriler
+  impressions?: number;
+  clicks?: number;
+  conversions?: number;
 }
 
 export interface KPIData {
@@ -20,4 +24,8 @@ export interface KPIData {
   averageCTR: number;
   aiScore: number;
   criticalAlerts: number;
+  // Yeni KPI'lar
+  totalClicks?: number;
+  totalImpressions?: number;
+  totalConversions?: number;
 }

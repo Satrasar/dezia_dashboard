@@ -41,18 +41,29 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
           platform: (camp.platform || 'facebook') as 'facebook' | 'instagram',
           objective: camp.objective || '',
           status: camp.status === 'ACTIVE' ? 'active' : 'paused',
-          budget: camp.daily_budget || 0,
-          spent: camp.spent || 0,
-          ctr: (camp.ctr || 0) * 100, // n8n'de decimal, UI'da yüzde
-          cpc: camp.cpc || 0,
+          budget: camp.daily_budget || camp.budget || 0,
+          spent: camp.spent || camp.cost || 0,
+          ctr: camp.ctr_percentage || (camp.ctr || 0) * 100,
+          cpc: camp.cpc || camp.cost_per_click || 0,
           aiScore: camp.performance_score || camp.ai_score || 50,
           alerts: camp.alert_level === 'critical' ? ['Kritik uyarı var'] : [],
-          lastUpdated: camp.last_updated ? new Date(camp.last_updated) : new Date()
+          lastUpdated: camp.last_updated ? new Date(camp.last_updated) : new Date(),
+          // Yeni gerçek veriler
+          impressions: camp.impressions || 0,
+          clicks: camp.clicks || 0,
+          conversions: camp.conversions || 0
         }));
 
         setData({
           campaigns,
-          kpis: response.data?.kpis || {},
+          kpis: {
+            ...response.data?.kpis,
+            // n8n'den gelen gerçek toplam veriler
+            total_clicks: response.data?.kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0),
+            total_impressions: response.data?.kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0),
+            total_conversions: response.data?.kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0),
+            total_spent: response.data?.kpis?.total_spent || campaigns.reduce((sum, c) => sum + c.spent, 0)
+          },
           alerts: response.data?.alerts || [],
           loading: false,
           error: null,
