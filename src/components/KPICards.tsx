@@ -1,6 +1,7 @@
 import React from 'react';
 import { Campaign } from '../types';
 import { TrendingUp, Activity, DollarSign, MousePointer, Brain, AlertTriangle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface KPICardsProps {
   campaigns: Campaign[];
@@ -9,6 +10,8 @@ interface KPICardsProps {
 }
 
 const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) => {
+  const { t } = useLanguage();
+  
   // n8n'den gelen gerçek KPI verilerini kullan, yoksa hesapla
   const totalCampaigns = kpis?.total_campaigns || campaigns.length;
   const activeCampaigns = kpis?.active_campaigns || campaigns.filter(c => c.status === 'active').length;
@@ -40,7 +43,7 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) =
 
   const cards = [
     {
-      title: 'Toplam Kampanya',
+      title: t('totalCampaigns'),
       value: totalCampaigns.toString(),
       icon: TrendingUp,
       color: 'from-blue-500 to-blue-600',
@@ -48,7 +51,7 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) =
       borderColor: 'border-blue-500/30'
     },
     {
-      title: 'Aktif Kampanya',
+      title: t('activeCampaigns'),
       value: activeCampaigns.toString(),
       icon: Activity,
       color: 'from-green-500 to-green-600',
@@ -56,7 +59,7 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) =
       borderColor: 'border-green-500/30'
     },
     {
-      title: 'Toplam Maliyet',
+      title: t('totalCost'),
       value: formattedKpis?.cost?.value || formatCurrency(totalSpent),
       icon: DollarSign,
       color: 'from-orange-500 to-orange-600',
@@ -64,7 +67,7 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) =
       borderColor: 'border-orange-500/30'
     },
     {
-      title: 'CTR Oranı',
+      title: t('ctrRate'),
       value: `%${averageCTR.toFixed(2)}`,
       icon: MousePointer,
       color: 'from-purple-500 to-purple-600',
@@ -72,7 +75,7 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) =
       borderColor: 'border-purple-500/30'
     },
     {
-      title: 'AI Performans Skoru',
+      title: t('aiPerformanceScore'),
       value: `${Math.round(averageAiScore)}`,
       icon: Brain,
       color: 'from-blue-500 to-blue-600',
@@ -80,7 +83,7 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) =
       borderColor: 'border-blue-500/30'
     },
     {
-      title: 'Kritik Uyarılar',
+      title: t('criticalAlerts'),
       value: criticalAlerts.toString(),
       icon: AlertTriangle,
       color: 'from-red-500 to-red-600',
@@ -90,19 +93,19 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) =
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
       {cards.map((card, index) => (
         <div
           key={index}
-          className={`${card.bgColor} ${card.borderColor} border backdrop-blur-sm rounded-xl p-4 hover:scale-105 transition-all duration-300 cursor-pointer group`}
+          className={`google-ads-card ${card.bgColor} ${card.borderColor} border backdrop-blur-sm rounded-2xl p-6 hover:scale-105 transition-all duration-300 cursor-pointer group shadow-lg hover:shadow-xl`}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-300 text-sm font-medium mb-1">{card.title}</p>
-              <p className="text-2xl font-bold text-white">{card.value}</p>
+              <p className="text-gray-300 text-sm font-medium mb-2">{card.title}</p>
+              <p className="text-3xl font-bold text-white">{card.value}</p>
             </div>
-            <div className={`p-3 rounded-lg bg-gradient-to-r ${card.color} group-hover:scale-110 transition-transform`}>
-              <card.icon className="w-6 h-6 text-white" />
+            <div className={`p-4 rounded-xl bg-gradient-to-r ${card.color} group-hover:scale-110 transition-transform shadow-lg`}>
+              <card.icon className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
