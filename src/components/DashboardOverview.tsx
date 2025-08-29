@@ -46,7 +46,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       className="space-y-6"
     >
       {/* Google Ads Style Charts - n8n'den gelen gerçek veriler */}
-      <GoogleAdsStyleCharts campaigns={campaigns} formattedKpis={formattedKpis} kpis={kpis} />
+      <GoogleAdsStyleCharts formattedKpis={formattedKpis} kpis={kpis} />
 
       {/* KPI Cards */}
       <KPICards campaigns={campaigns} kpis={kpis} formattedKpis={formattedKpis} />
