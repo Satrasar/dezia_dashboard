@@ -1,168 +1,121 @@
-import React from 'react';
-import { Campaign } from '../types';
-import { TrendingUp, Activity, DollarSign, MousePointer, Brain, AlertTriangle } from 'lucide-react';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-interface KPICardsProps {
-  campaigns: Campaign[];
-  kpis?: any;
-  kpis?: any;
-  kpis?: any;
-  formattedKpis?: any;
+/* Google Ads Style Variables */
+:root {
+  --google-blue: #4285f4;
+  --google-red: #ea4335;
+  --google-yellow: #fbbc04;
+  --google-green: #34a853;
+  --google-gray: #5f6368;
+  --google-light-gray: #f8f9fa;
+  --google-dark-gray: #202124;
 }
 
-const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
-  // n8n'den gelen gerçek KPI verilerini kullan, yoksa hesapla
-  const totalCampaigns = kpis?.total_campaigns || campaigns.length;
-  const activeCampaigns = kpis?.active_campaigns || campaigns.filter(c => c.status === 'active').length;
-  const totalSpent = kpis?.total_spent || campaigns.reduce((sum, c) => sum + c.spent, 0);
-  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
-  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
-  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
-  
-  // CTR hesaplama: (clicks / impressions) * 100
-  const averageCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
-  
-  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
-  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
-  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
-  
-  // CTR hesaplama: (clicks / impressions) * 100
-  const averageCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
-  
-  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
-  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
-  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
-  
-  // CTR hesaplama: n8n'den gelen avg_ctr kullan
-  const averageCTR = kpis?.avg_ctr || (totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0);
-  
-  const averageAiScore = kpis?.ai_score_avg || (campaigns.length > 0 
-    ? campaigns.reduce((sum, c) => sum + c.aiScore, 0) / campaigns.length 
-    : 0);
-  const criticalAlerts = kpis?.critical_alerts || campaigns.reduce((sum, c) => sum + c.alerts.length, 0);
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-  // Formatlanmış değerleri kullan (n8n'den gelen)
-  const formatNumber = (num: number) => {
-    if (formattedKpis) return num.toString(); // n8n zaten formatlamış
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toFixed(0);
-  };
+body {
+  font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
 
-  const formatCurrency = (num: number) => {
-    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
-    return `₺${num.toFixed(2)}`;
-  };
-
-  // Değerleri formatla
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toFixed(0);
-  };
-
-  const formatCurrency = (num: number) => {
-    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
-    return `₺${num.toFixed(2)}`;
-  };
-
-  // Değerleri formatla
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toFixed(0);
-  };
-
-  const formatCurrency = (num: number) => {
-    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
-    return `₺${num.toFixed(2)}`;
-  };
-
-  const cards = [
-    {
-      title: 'Toplam Kampanya',
-      value: totalCampaigns.toString(),
-      icon: TrendingUp,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-500/20',
-      borderColor: 'border-blue-500/30'
-    },
-    {
-      title: 'Aktif Kampanya',
-      value: activeCampaigns.toString(),
-      icon: Activity,
-      color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-500/20',
-      borderColor: 'border-green-500/30'
-    },
-    {
-      title: 'Toplam Maliyet',
-      value: formatCurrency(totalSpent),
-      icon: DollarSign,
-      color: 'from-orange-500 to-orange-600',
-      bgColor: 'bg-orange-500/20',
-      borderColor: 'border-orange-500/30'
-    },
-    {
-      title: 'CTR Oranı',
-      value: `%${averageCTR.toFixed(2)}`,
-      transform: translateY(0);
-    }
+/* Google Ads Style Components */
+@layer components {
+  .google-ads-card {
+    @apply bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 
+           hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer;
   }
   
-  /* Google Ads Hover Effects */
+  .google-ads-button {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg 
+           shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105;
+  }
+  
+  .google-ads-input {
+    @apply border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 
+           focus:border-transparent transition-all duration-200;
+  }
+  
+  .google-ads-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .google-ads-glass {
+    @apply backdrop-blur-sm bg-white/10 border border-white/20;
+  }
+  
   .google-ads-hover {
     @apply transition-all duration-300 hover:scale-105 hover:shadow-xl;
   }
-  
-  /* Google Ads Glass Effect */
-  .google-ads-glass {
-    @apply backdrop-blur-sm bg-white/10 dark:bg-gray-900/10 border border-white/20 dark:border-gray-700/20;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Animation Classes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
-      icon: MousePointer,
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-500/20',
-      borderColor: 'border-purple-500/30'
-    },
-    {
-      title: 'AI Performans Skoru',
-      value: `${Math.round(averageAiScore)}`,
-      icon: Brain,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-500/20',
-      borderColor: 'border-blue-500/30'
-    },
-    {
-      title: 'Kritik Uyarılar',
-      value: criticalAlerts.toString(),
-      icon: AlertTriangle,
-      color: 'from-red-500 to-red-600',
-      bgColor: 'bg-red-500/20',
-      borderColor: 'border-red-500/30'
-    }
-  ];
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      {cards.map((card, index) => (
-        <div
-          key={index}
-          className={`${card.bgColor} ${card.borderColor} border backdrop-blur-sm rounded-xl p-4 hover:scale-105 transition-all duration-300 cursor-pointer group`}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-300 text-sm font-medium mb-2">{card.title}</p>
-              <p className="text-3xl font-bold text-white">{card.value}</p>
-            </div>
-            <div className={`p-4 rounded-xl bg-gradient-to-r ${card.color} group-hover:scale-110 transition-transform shadow-lg`}>
-              <card.icon className="w-7 h-7 text-white" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
 
-export default KPICards;
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  @apply inline-block w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .google-ads-card {
+    @apply bg-gray-800/95 border-gray-700/20;
+  }
+  
+  .google-ads-glass {
+    @apply bg-gray-900/10 border-gray-700/20;
+  }
+}
