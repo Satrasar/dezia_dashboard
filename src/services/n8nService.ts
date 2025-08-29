@@ -39,6 +39,9 @@ export class N8nService {
     try {
       console.log('n8n API isteği gönderiliyor:', this.webhookUrl);
       
+      let data;
+      let responseText;
+      
       const response = await this.makeRequest(this.webhookUrl, {
         method: 'GET',
       });
@@ -51,41 +54,18 @@ export class N8nService {
       });
 
       if (!response.ok) {
-        let errorDetails = '';
         try {
-          const errorText = await response.text();
-          console.error('n8n hata detayı:', errorText);
-          errorDetails = errorText;
+          responseText = await response.text();
+          console.error('n8n hata detayı:', responseText);
         } catch (e) {
           console.error('Hata detayı okunamadı:', e);
         }
-        let errorText;
-        try {
-          errorText = await response.text();
-        } catch {
-          errorText = 'Yanıt okunamadı';
-        }
-        console.error('n8n API hata yanıtı:', errorText);
+        console.error('n8n API hata yanıtı:', responseText || 'Yanıt okunamadı');
         throw new Error(`n8n API Hatası (${response.status}): ${response.statusText}`);
       }
 
-      console.log('n8n\'den gelen veri:', data);
-      
-      // n8n response formatını kontrol et
-      if (!data.success && !data.data) {
-        console.warn('n8n response formatı beklenmedik:', data);
-        // Eğer direkt kampanya verisi geliyorsa
-        if (Array.isArray(data)) {
-          return {
-            success: true,
-            data: { campaigns: data },
-            timestamp: new Date().toISOString()
-          };
-        }
-      }
-      let data;
       try {
-        const responseText = await response.text();
+        responseText = await response.text();
         console.log('n8n ham yanıt:', responseText);
         
         // Check if response is JSON
@@ -102,6 +82,21 @@ export class N8nService {
       } catch (parseError) {
         console.error('JSON parse hatası:', parseError);
         throw new Error('n8n yanıtı JSON formatında değil');
+      }
+
+      console.log('n8n\'den gelen veri:', data);
+      
+      // n8n response formatını kontrol et
+      if (!data.success && !data.data) {
+        console.warn('n8n response formatı beklenmedik:', data);
+        // Eğer direkt kampanya verisi geliyorsa
+        if (Array.isArray(data)) {
+          return {
+            success: true,
+            data: { campaigns: data },
+            timestamp: new Date().toISOString()
+          };
+        }
       }
 
       // Validate response structure
