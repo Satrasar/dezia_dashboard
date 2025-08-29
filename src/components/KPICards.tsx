@@ -4,17 +4,39 @@ import { TrendingUp, Activity, DollarSign, MousePointer, Brain, AlertTriangle } 
 
 interface KPICardsProps {
   campaigns: Campaign[];
+  kpis?: any;
+  formattedKpis?: any;
 }
 
-const KPICards: React.FC<KPICardsProps> = ({ campaigns }) => {
-  const totalCampaigns = campaigns.length;
-  const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
-  const totalSpent = campaigns.reduce((sum, c) => sum + c.spent, 0);
-  const averageCTR = campaigns.reduce((sum, c) => sum + c.ctr, 0) / campaigns.length;
-  const averageAiScore = campaigns.length > 0 
+const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) => {
+  // n8n'den gelen gerçek KPI verilerini kullan, yoksa hesapla
+  const totalCampaigns = kpis?.total_campaigns || campaigns.length;
+  const activeCampaigns = kpis?.active_campaigns || campaigns.filter(c => c.status === 'active').length;
+  const totalSpent = kpis?.total_spent || campaigns.reduce((sum, c) => sum + c.spent, 0);
+  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
+  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
+  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
+  
+  // CTR hesaplama: n8n'den gelen avg_ctr kullan
+  const averageCTR = kpis?.avg_ctr || (totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0);
+  
+  const averageAiScore = kpis?.ai_score_avg || (campaigns.length > 0 
     ? campaigns.reduce((sum, c) => sum + c.aiScore, 0) / campaigns.length 
-    : 0;
-  const criticalAlerts = campaigns.reduce((sum, c) => sum + c.alerts.length, 0);
+    : 0);
+  const criticalAlerts = kpis?.critical_alerts || campaigns.reduce((sum, c) => sum + c.alerts.length, 0);
+
+  // Formatlanmış değerleri kullan (n8n'den gelen)
+  const formatNumber = (num: number) => {
+    if (formattedKpis) return num.toString(); // n8n zaten formatlamış
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toFixed(0);
+  };
+
+  const formatCurrency = (num: number) => {
+    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
+    return `₺${num.toFixed(2)}`;
+  };
 
   const cards = [
     {
@@ -34,15 +56,15 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns }) => {
       borderColor: 'border-green-500/30'
     },
     {
-      title: 'Toplam Harcama',
-      value: `₺${totalSpent.toFixed(2)}`,
+      title: 'Toplam Maliyet',
+      value: formattedKpis?.cost?.value || formatCurrency(totalSpent),
       icon: DollarSign,
       color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-500/20',
       borderColor: 'border-orange-500/30'
     },
     {
-      title: 'Ortalama CTR',
+      title: 'CTR Oranı',
       value: `%${averageCTR.toFixed(2)}`,
       icon: MousePointer,
       color: 'from-purple-500 to-purple-600',
@@ -51,7 +73,7 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns }) => {
     },
     {
       title: 'AI Performans Skoru',
-      value: `%${Math.round(averageAiScore)}`,
+      value: `${Math.round(averageAiScore)}`,
       icon: Brain,
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-500/20',

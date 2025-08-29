@@ -1,256 +1,134 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { useTheme } from '../contexts/ThemeContext';
+import { Campaign } from '../types';
+import { TrendingUp, Activity, DollarSign, MousePointer, Brain, AlertTriangle } from 'lucide-react';
 
-interface MetricCardProps {
-  title: string;
-  value: string;
-  change: string;
-  changeType: 'positive' | 'negative' | 'neutral';
-  color: string;
+interface KPICardsProps {
+  campaigns: Campaign[];
+  kpis?: any;
+  kpis?: any;
+  formattedKpis?: any;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, changeType, color }) => {
-  const { isDark } = useTheme();
+const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
+  // n8n'den gelen gerçek KPI verilerini kullan, yoksa hesapla
+  const totalCampaigns = kpis?.total_campaigns || campaigns.length;
+  const activeCampaigns = kpis?.active_campaigns || campaigns.filter(c => c.status === 'active').length;
+  const totalSpent = kpis?.total_spent || campaigns.reduce((sum, c) => sum + c.spent, 0);
+  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
+  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
+  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
   
-  const getChangeColor = () => {
-    if (changeType === 'positive') return 'text-green-500';
-    if (changeType === 'negative') return 'text-red-500';
-    return isDark ? 'text-gray-400' : 'text-gray-600';
+  // CTR hesaplama: (clicks / impressions) * 100
+  const averageCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+  
+  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
+  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
+  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
+  
+  // CTR hesaplama: n8n'den gelen avg_ctr kullan
+  const averageCTR = kpis?.avg_ctr || (totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0);
+  
+  const averageAiScore = kpis?.ai_score_avg || (campaigns.length > 0 
+    ? campaigns.reduce((sum, c) => sum + c.aiScore, 0) / campaigns.length 
+    : 0);
+  const criticalAlerts = kpis?.critical_alerts || campaigns.reduce((sum, c) => sum + c.alerts.length, 0);
+
+  // Formatlanmış değerleri kullan (n8n'den gelen)
+  const formatNumber = (num: number) => {
+    if (formattedKpis) return num.toString(); // n8n zaten formatlamış
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toFixed(0);
   };
 
+  const formatCurrency = (num: number) => {
+    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
+    return `₺${num.toFixed(2)}`;
+  };
+
+  // Değerleri formatla
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toFixed(0);
+  };
+
+  const formatCurrency = (num: number) => {
+    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
+    return `₺${num.toFixed(2)}`;
+  };
+
+  const cards = [
+    {
+      title: 'Toplam Kampanya',
+      value: totalCampaigns.toString(),
+      icon: TrendingUp,
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-500/20',
+      borderColor: 'border-blue-500/30'
+    },
+    {
+      title: 'Aktif Kampanya',
+      value: activeCampaigns.toString(),
+      icon: Activity,
+      color: 'from-green-500 to-green-600',
+      bgColor: 'bg-green-500/20',
+      borderColor: 'border-green-500/30'
+    },
+    {
+      title: 'Toplam Maliyet',
+      value: formatCurrency(totalSpent),
+      icon: DollarSign,
+      color: 'from-orange-500 to-orange-600',
+      bgColor: 'bg-orange-500/20',
+      borderColor: 'border-orange-500/30'
+    },
+    {
+      title: 'CTR Oranı',
+      value: `%${averageCTR.toFixed(2)}`,
+      icon: MousePointer,
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-500/20',
+      borderColor: 'border-purple-500/30'
+    },
+    {
+      title: 'AI Performans Skoru',
+      value: `${Math.round(averageAiScore)}`,
+      icon: Brain,
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-500/20',
+      borderColor: 'border-blue-500/30'
+    },
+    {
+      title: 'Kritik Uyarılar',
+      value: criticalAlerts.toString(),
+      icon: AlertTriangle,
+      color: 'from-red-500 to-red-600',
+      bgColor: 'bg-red-500/20',
+      borderColor: 'border-red-500/30'
+    }
+  ];
+
   return (
-    <div className={`${color} text-white p-4 rounded-lg`}>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-sm font-medium opacity-90">{title}</span>
-        <span className="text-xs opacity-75">▼</span>
-      </div>
-      <div className="text-2xl font-bold mb-1">{value}</div>
-      <div className={`text-xs ${getChangeColor()}`}>
-        {changeType === 'positive' ? '▲' : changeType === 'negative' ? '▼' : '●'} {change}
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      {cards.map((card, index) => (
+        <div
+          key={index}
+          className={`${card.bgColor} ${card.borderColor} border backdrop-blur-sm rounded-xl p-4 hover:scale-105 transition-all duration-300 cursor-pointer group`}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-300 text-sm font-medium mb-1">{card.title}</p>
+              <p className="text-2xl font-bold text-white">{card.value}</p>
+            </div>
+            <div className={`p-3 rounded-lg bg-gradient-to-r ${card.color} group-hover:scale-110 transition-transform`}>
+              <card.icon className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
 
-const GoogleAdsStyleCharts: React.FC = () => {
-  const { isDark } = useTheme();
-
-  const multiLineData = [
-    { date: 'May 1', clicks: 85, impressions: 95, conversions: 88, cost: 92 },
-    { date: 'May 5', clicks: 88, impressions: 92, conversions: 85, cost: 89 },
-    { date: 'May 10', clicks: 92, impressions: 88, conversions: 95, cost: 85 },
-    { date: 'May 15', clicks: 95, impressions: 85, conversions: 92, cost: 88 },
-    { date: 'May 20', clicks: 88, impressions: 92, conversions: 88, cost: 95 },
-    { date: 'May 25', clicks: 92, impressions: 95, conversions: 85, cost: 92 },
-    { date: 'May 31', clicks: 98, impressions: 88, conversions: 92, cost: 85 },
-  ];
-
-  const barData = [
-    { name: 'Acme Dental', value: 110 },
-    { name: 'Acme Law', value: 108 },
-    { name: 'Default', value: 105 },
-    { name: 'Acme Auto Body', value: 95 },
-  ];
-
-  const performanceData = [
-    { metric: 'View-Through Conv.', value: '752', change: '1%', changeType: 'negative' as const },
-    { metric: 'Avg CPC', value: '$194.86', change: '6%', changeType: 'negative' as const },
-    { metric: 'Clicks', value: '194', change: '70%', changeType: 'positive' as const },
-    { metric: 'Conversion Rate', value: '19.02%', change: '435%', changeType: 'positive' as const },
-    { metric: 'Conversions', value: '262', change: '296%', changeType: 'positive' as const },
-    { metric: 'Cost', value: '$1,341.00', change: '4%', changeType: 'negative' as const },
-    { metric: 'Cost / Conversion', value: '$214.14', change: '4%', changeType: 'negative' as const },
-    { metric: 'Impressions', value: '128', change: '128%', changeType: 'positive' as const },
-  ];
-
-  return (
-    <div className="space-y-6">
-      {/* Top Metrics Bar */}
-      <div className="grid grid-cols-4 gap-1 rounded-lg overflow-hidden">
-        <MetricCard
-          title="Clicks"
-          value="944"
-          change="▼"
-          changeType="neutral"
-          color="bg-blue-500"
-        />
-        <MetricCard
-          title="Impressions"
-          value="33.6K"
-          change="▼"
-          changeType="neutral"
-          color="bg-red-500"
-        />
-        <MetricCard
-          title="Conversions"
-          value="28.06"
-          change="▼"
-          changeType="neutral"
-          color="bg-yellow-500"
-        />
-        <MetricCard
-          title="Cost"
-          value="$1.32K"
-          change="▼"
-          changeType="neutral"
-          color="bg-green-500"
-        />
-      </div>
-
-      {/* Multi-line Chart */}
-      <div className={`${
-        isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-      } border rounded-xl p-6`}>
-        <h3 className={`text-lg font-semibold mb-4 ${
-          isDark ? 'text-white' : 'text-gray-900'
-        }`}>
-          Performance Trends
-        </h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={multiLineData}>
-            <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
-            <XAxis 
-              dataKey="date" 
-              stroke={isDark ? '#9ca3af' : '#6b7280'} 
-              fontSize={12}
-            />
-            <YAxis 
-              stroke={isDark ? '#9ca3af' : '#6b7280'} 
-              fontSize={12}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: isDark ? '#1f2937' : '#ffffff', 
-                border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
-                borderRadius: '8px',
-                color: isDark ? '#fff' : '#000'
-              }} 
-            />
-            <Line 
-              type="monotone" 
-              dataKey="clicks" 
-              stroke="#3b82f6" 
-              strokeWidth={2}
-              dot={false}
-              animationDuration={1500}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="impressions" 
-              stroke="#ef4444" 
-              strokeWidth={2}
-              dot={false}
-              animationDuration={1500}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="conversions" 
-              stroke="#10b981" 
-              strokeWidth={2}
-              dot={false}
-              animationDuration={1500}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="cost" 
-              stroke="#f59e0b" 
-              strokeWidth={2}
-              dot={false}
-              animationDuration={1500}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Bar Chart */}
-        <div className={`${
-          isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        } border rounded-xl p-6`}>
-          <h3 className={`text-lg font-semibold mb-4 ${
-            isDark ? 'text-white' : 'text-gray-900'
-          }`}>
-            View-Through Conv.
-          </h3>
-          <div className="mb-4">
-            <span className={`text-3xl font-bold ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}>
-              429
-            </span>
-            <span className="text-green-500 text-sm ml-2">0%</span>
-          </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={barData}>
-              <XAxis 
-                dataKey="name" 
-                stroke={isDark ? '#9ca3af' : '#6b7280'} 
-                fontSize={12}
-              />
-              <YAxis 
-                stroke={isDark ? '#9ca3af' : '#6b7280'} 
-                fontSize={12}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: isDark ? '#1f2937' : '#ffffff', 
-                  border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
-                  borderRadius: '8px',
-                  color: isDark ? '#fff' : '#000'
-                }} 
-              />
-              <Bar 
-                dataKey="value" 
-                fill="#3b82f6" 
-                radius={[4, 4, 0, 0]}
-                animationDuration={1500}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Performance Metrics Grid */}
-        <div className={`${
-          isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        } border rounded-xl p-6`}>
-          <h3 className={`text-lg font-semibold mb-4 ${
-            isDark ? 'text-white' : 'text-gray-900'
-          }`}>
-            Performance Metrics
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            {performanceData.map((item, index) => (
-              <div 
-                key={index}
-                className={`p-3 rounded-lg border ${
-                  isDark ? 'border-gray-700 bg-gray-700/30' : 'border-gray-200 bg-gray-50'
-                }`}
-              >
-                <div className={`text-xs mb-1 ${
-                  isDark ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {item.metric}
-                </div>
-                <div className={`text-lg font-bold ${
-                  isDark ? 'text-white' : 'text-gray-900'
-                }`}>
-                  {item.value}
-                </div>
-                <div className={`text-xs ${
-                  item.changeType === 'positive' ? 'text-green-500' : 
-                  item.changeType === 'negative' ? 'text-red-500' : 
-                  isDark ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {item.changeType === 'positive' ? '▲' : '▼'} {item.change}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default GoogleAdsStyleCharts;
+export default KPICards;
