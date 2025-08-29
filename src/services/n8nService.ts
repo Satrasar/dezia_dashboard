@@ -9,29 +9,44 @@ export class N8nService {
   }
 
   // Kampanya verilerini çek
-  private async makeRequest(url: string, options: RequestInit = {}) {
+  private async makeRequest(url: string, options: RequestInit = {}, retries: number = 2) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-    try {
-      const response = await fetch(url, {
-        ...options,
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...options.headers,
-        },
-      });
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        console.log(`n8n API isteği (deneme ${attempt + 1}/${retries + 1}):`, url);
+        
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache',
+            ...options.headers,
+          },
+        });
 
-      clearTimeout(timeoutId);
-      return response;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      if (error.name === 'AbortError') {
-        throw new Error('Request timeout - n8n sunucusu yanıt vermiyor');
+        clearTimeout(timeoutId);
+        return response;
+      } catch (error) {
+        console.error(`n8n API deneme ${attempt + 1} başarısız:`, error);
+        
+        if (attempt === retries) {
+          clearTimeout(timeoutId);
+          if (error.name === 'AbortError') {
+            throw new Error('Request timeout - n8n sunucusu yanıt vermiyor (30 saniye)');
+          }
+          if (error.message.includes('Failed to fetch')) {
+            throw new Error('n8n sunucusuna bağlanılamıyor - Ağ bağlantısı veya CORS sorunu');
+          }
+          throw error;
+        }
+        
+        // Wait before retry (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
       }
-      throw error;
     }
   }
 
@@ -56,12 +71,21 @@ export class N8nService {
       if (!response.ok) {
         try {
           responseText = await response.text();
-          console.error('n8n hata detayı:', responseText);
+          console.error('n8n hata detayı:', responseText?.substring(0, 500) || 'Boş hata yanıtı');
         } catch (e) {
           console.error('Hata detayı okunamadı:', e);
         }
-        console.error('n8n API hata yanıtı:', responseText || 'Yanıt okunamadı');
-        throw new Error(`n8n API Hatası (${response.status}): ${response.statusText}`);
+        
+        let errorMessage = `n8n API Hatası (${response.status}): ${response.statusText}`;
+        if (response.status === 500) {
+          errorMessage += ' - n8n workflow\'unda hata var. Lütfen n8n dashboard\'dan execution loglarını kontrol edin.';
+        } else if (response.status === 404) {
+          errorMessage += ' - Webhook URL\'i bulunamadı. Workflow aktif mi kontrol edin.';
+        } else if (response.status >= 400 && response.status < 500) {
+          errorMessage += ' - İstek formatı hatalı veya yetkilendirme sorunu.';
+        }
+        
+        throw new Error(errorMessage);
       }
 
       try {
