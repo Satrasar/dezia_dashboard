@@ -1,26 +1,21 @@
 import React from 'react';
 import { Campaign } from '../types';
 import { TrendingUp, Activity, DollarSign, MousePointer, Brain, AlertTriangle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface KPICardsProps {
   campaigns: Campaign[];
   kpis?: any;
-  kpis?: any;
   formattedKpis?: any;
 }
 
-const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
+const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis, formattedKpis }) => {
+  const { t } = useLanguage();
+  
   // n8n'den gelen gerçek KPI verilerini kullan, yoksa hesapla
   const totalCampaigns = kpis?.total_campaigns || campaigns.length;
   const activeCampaigns = kpis?.active_campaigns || campaigns.filter(c => c.status === 'active').length;
   const totalSpent = kpis?.total_spent || campaigns.reduce((sum, c) => sum + c.spent, 0);
-  const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
-  const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
-  const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
-  
-  // CTR hesaplama: (clicks / impressions) * 100
-  const averageCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
-  
   const totalClicks = kpis?.total_clicks || campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
   const totalImpressions = kpis?.total_impressions || campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
   const totalConversions = kpis?.total_conversions || campaigns.reduce((sum, c) => sum + (c.conversions || 0), 0);
@@ -46,21 +41,9 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
     return `₺${num.toFixed(2)}`;
   };
 
-  // Değerleri formatla
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toFixed(0);
-  };
-
-  const formatCurrency = (num: number) => {
-    if (num >= 1000) return `₺${(num / 1000).toFixed(1)}K`;
-    return `₺${num.toFixed(2)}`;
-  };
-
   const cards = [
     {
-      title: 'Toplam Kampanya',
+      title: t('totalCampaigns'),
       value: totalCampaigns.toString(),
       icon: TrendingUp,
       color: 'from-blue-500 to-blue-600',
@@ -68,7 +51,7 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
       borderColor: 'border-blue-500/30'
     },
     {
-      title: 'Aktif Kampanya',
+      title: t('activeCampaigns'),
       value: activeCampaigns.toString(),
       icon: Activity,
       color: 'from-green-500 to-green-600',
@@ -76,15 +59,15 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
       borderColor: 'border-green-500/30'
     },
     {
-      title: 'Toplam Maliyet',
-      value: formatCurrency(totalSpent),
+      title: t('totalCost'),
+      value: formattedKpis?.cost?.value || formatCurrency(totalSpent),
       icon: DollarSign,
       color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-500/20',
       borderColor: 'border-orange-500/30'
     },
     {
-      title: 'CTR Oranı',
+      title: t('ctrRate'),
       value: `%${averageCTR.toFixed(2)}`,
       icon: MousePointer,
       color: 'from-purple-500 to-purple-600',
@@ -92,7 +75,7 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
       borderColor: 'border-purple-500/30'
     },
     {
-      title: 'AI Performans Skoru',
+      title: t('aiPerformanceScore'),
       value: `${Math.round(averageAiScore)}`,
       icon: Brain,
       color: 'from-blue-500 to-blue-600',
@@ -100,7 +83,7 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
       borderColor: 'border-blue-500/30'
     },
     {
-      title: 'Kritik Uyarılar',
+      title: t('criticalAlerts'),
       value: criticalAlerts.toString(),
       icon: AlertTriangle,
       color: 'from-red-500 to-red-600',
@@ -110,11 +93,11 @@ const KPICards: React.FC<KPICardsProps> = ({ campaigns, kpis }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
       {cards.map((card, index) => (
         <div
           key={index}
-          className={`${card.bgColor} ${card.borderColor} border backdrop-blur-sm rounded-xl p-4 hover:scale-105 transition-all duration-300 cursor-pointer group`}
+          className={`google-ads-card ${card.bgColor} ${card.borderColor} border backdrop-blur-sm rounded-2xl p-6 hover:scale-105 transition-all duration-300 cursor-pointer group shadow-lg hover:shadow-xl`}
         >
           <div className="flex items-center justify-between">
             <div>
