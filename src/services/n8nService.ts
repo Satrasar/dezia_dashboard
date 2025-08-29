@@ -105,6 +105,32 @@ export class N8nService {
       throw error;
     }
   }
+
+  // Otomasyon eylemlerini tetikle
+  async triggerAutomation(action: string, data: any) {
+    try {
+      const response = await fetch(this.webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action,
+          ...data,
+          timestamp: new Date().toISOString()
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`n8n otomasyon hatası: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Otomasyon tetikleme hatası:', error);
+      throw error;
+    }
+  }
 }
 
 export const n8nService = new N8nService();

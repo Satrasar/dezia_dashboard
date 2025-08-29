@@ -48,8 +48,8 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
 
         setData({
           campaigns,
-          kpis: response.data.kpis,
-          alerts: response.data.alerts,
+          kpis: response.data.kpis || {},
+          alerts: response.data.alerts || [],
           loading: false,
           error: null,
           lastUpdate: response.timestamp
@@ -82,6 +82,26 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
     }
   };
 
+  // Otomasyon eylemlerini tetikle
+  const triggerAutomation = async (action: string, data: any) => {
+    try {
+      const response = await fetch('/api/n8n', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action,
+          ...data
+        })
+      });
+      
+      return response.ok;
+    } catch (error) {
+      console.error('Otomasyon tetikleme hatası:', error);
+      return false;
+    }
+  };
   // İlk yükleme
   useEffect(() => {
     fetchData();
@@ -95,6 +115,7 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
 
   return {
     ...data,
-    refresh: fetchData
+    refresh: fetchData,
+    triggerAutomation
   };
 };
