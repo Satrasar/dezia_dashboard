@@ -157,8 +157,8 @@ export const useN8nData = () => {
   useEffect(() => {
     fetchData();
     
-    // 30 saniyede bir otomatik güncelleme
-    const interval = setInterval(fetchData, 30000);
+    // 15 dk bir otomatik güncelleme
+    const interval = setInterval(fetchData, 900000);
     
     return () => clearInterval(interval);
   }, []);
