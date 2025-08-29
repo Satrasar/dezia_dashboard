@@ -124,7 +124,6 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
 
   // Otomatik yenileme
   useEffect(() => {
-    const interval = setInterval(fetchData, 60000); // 1 dakikada bir güncelle (daha az sık)
     const interval = setInterval(fetchData, refreshInterval);
     return () => clearInterval(interval);
   }, [refreshInterval]);
