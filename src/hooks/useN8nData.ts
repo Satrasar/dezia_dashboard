@@ -96,7 +96,22 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
         })
       });
       
-      return response.ok;
+        
+        // Provide user-friendly error messages
+        let userMessage = 'Bilinmeyen hata oluştu';
+        if (err.message.includes('Gmail API') || err.message.includes('email yanıtı')) {
+          userMessage = 'n8n workflow yanlış yapılandırılmış - Dashboard Data node\'u aktif değil';
+        } else if (err.message.includes('CORS') || err.message.includes('bağlanılamıyor')) {
+          userMessage = 'n8n sunucusuna bağlanılamıyor - CORS ayarlarını kontrol edin';
+        } else if (err.message.includes('timeout')) {
+          userMessage = 'n8n sunucusu yanıt vermiyor - Workflow aktif mi kontrol edin';
+        } else if (err.message.includes('JSON')) {
+          userMessage = 'n8n geçersiz yanıt döndürdü - Workflow yapılandırmasını kontrol edin';
+        } else {
+          userMessage = err.message;
+        }
+        
+        setError(`Veri çekme hatası: ${userMessage}`);
     } catch (error) {
       console.error('Otomasyon tetikleme hatası:', error);
       return false;
@@ -108,7 +123,7 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
   }, []);
 
   // Otomatik yenileme
-  useEffect(() => {
+    const interval = setInterval(fetchData, 60000); // 1 dakikada bir güncelle (daha az sık)
     const interval = setInterval(fetchData, refreshInterval);
     return () => clearInterval(interval);
   }, [refreshInterval]);
