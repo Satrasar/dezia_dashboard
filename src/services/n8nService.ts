@@ -5,7 +5,7 @@ export class N8nService {
 
   constructor() {
     // n8n webhook URL'inizi buraya ekleyin
-    this.webhookUrl = 'https://ozlemkumtas.app.n8n.cloud/webhook-test/56c93b71-b493-432c-a7c0-4dea2bd97771';
+    this.webhookUrl = '/api/n8n';
     this.baseUrl = 'https://ozlemkumtas.app.n8n.cloud/api/v1';
   }
 
