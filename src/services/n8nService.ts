@@ -42,7 +42,8 @@ export class N8nService {
       }
 
       const data = await response.json();
-      console.log('n8n'den gelen veri:', data);
+      console.log('n8n\'den gelen veri:', data);
+      )
       return data;
     } catch (error) {
       console.error('n8n API hatası:', error);
