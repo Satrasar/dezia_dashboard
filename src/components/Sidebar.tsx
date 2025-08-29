@@ -9,7 +9,9 @@ import {
   BarChart3, 
   Settings,
   ChevronLeft,
-  Activity
+  Activity,
+  Palette,
+  Megaphone
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -25,6 +27,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, currentPage, onPage
 
   const menuItems = [
     { icon: Home, label: 'Genel Bakış', page: 'overview' },
+    { icon: Palette, label: 'AI Görsel Oluşturma', page: 'ai-creative' },
+    { icon: Megaphone, label: 'Meta Ads Yayınla', page: 'meta-ads-publish' },
     { icon: DollarSign, label: 'Bütçe Analizi', page: 'budget' },
     { icon: Target, label: 'Performans Metrikleri', page: 'performance' },
     { icon: Zap, label: 'Otomatik Eylemler', page: 'automation' },

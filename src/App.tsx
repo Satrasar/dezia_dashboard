@@ -12,6 +12,8 @@ import AutomatedActions from './components/AutomatedActions';
 import AIRecommendations from './components/AIRecommendations';
 import Reports from './components/Reports';
 import Settings from './components/Settings';
+import AICreativeStudio from './components/AICreativeStudio';
+import MetaAdsPublisher from './components/MetaAdsPublisher';
 import { Campaign } from './types';
 
 function App() {
@@ -55,6 +57,10 @@ function App() {
     switch (currentPage) {
       case 'overview':
         return <DashboardOverview campaigns={filteredCampaigns} filters={filters} setFilters={setFilters} onToggleStatus={toggleCampaignStatus} />;
+      case 'ai-creative':
+        return <AICreativeStudio />;
+      case 'meta-ads-publish':
+        return <MetaAdsPublisher />;
       case 'budget':
         return <BudgetAnalysis campaigns={filteredCampaigns} />;
       case 'performance':
