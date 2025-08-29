@@ -33,17 +33,17 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
         // n8n'den gelen veriyi React state formatına çevir
         const campaigns: Campaign[] = response.data.campaigns.map((camp: any) => ({
           id: camp.id,
-          name: camp.name,
-          platform: camp.platform as 'facebook' | 'instagram',
-          objective: camp.objective,
+          name: camp.name || '',
+          platform: (camp.platform || 'facebook') as 'facebook' | 'instagram',
+          objective: camp.objective || '',
           status: camp.status === 'ACTIVE' ? 'active' : 'paused',
-          budget: camp.daily_budget,
-          spent: camp.spent,
-          ctr: camp.ctr * 100, // n8n'de decimal, UI'da yüzde
-          cpc: camp.cpc,
-          aiScore: camp.ai_score,
+          budget: camp.daily_budget || 0,
+          spent: camp.spent || 0,
+          ctr: (camp.ctr || 0) * 100, // n8n'de decimal, UI'da yüzde
+          cpc: camp.cpc || 0,
+          aiScore: camp.ai_score || 0,
           alerts: camp.alert_level === 'critical' ? ['Kritik uyarı var'] : [],
-          lastUpdated: new Date(camp.last_updated)
+          lastUpdated: camp.last_updated ? new Date(camp.last_updated) : new Date()
         }));
 
         setData({
