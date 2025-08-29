@@ -25,7 +25,9 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
     try {
       setData(prev => ({ ...prev, loading: true, error: null }));
       
+      console.log('Kampanya verisi çekiliyor...');
       const response = await n8nService.getCampaignData();
+      console.log('n8n servis yanıtı:', response);
       
       if (response.success) {
         // n8n'den gelen veriyi React state formatına çevir
@@ -53,14 +55,29 @@ export const useN8nData = (refreshInterval: number = 300000) => { // 5 dakika
           lastUpdate: response.timestamp
         });
       } else {
-        throw new Error('API yanıtı başarısız');
+        const errorMsg = response.error || response.message || 'n8n workflow başarısız yanıt döndürdü';
+        console.error('n8n workflow hatası:', response);
+        throw new Error(`n8n Workflow Hatası: ${errorMsg}`);
       }
     } catch (error) {
       console.error('Veri çekme hatası:', error);
+      
+      let userFriendlyError = 'Bilinmeyen hata';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('n8n API Hatası (500)')) {
+          userFriendlyError = 'n8n workflow\'unda hata oluştu. Lütfen n8n dashboard\'undan workflow loglarını kontrol edin.';
+        } else if (error.message.includes('bağlanılamıyor')) {
+          userFriendlyError = 'n8n sunucusuna erişilemiyor. Sunucu durumunu kontrol edin.';
+        } else {
+          userFriendlyError = error.message;
+        }
+      }
+      
       setData(prev => ({
         ...prev,
         loading: false,
-        error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+        error: userFriendlyError
       }));
     }
   };

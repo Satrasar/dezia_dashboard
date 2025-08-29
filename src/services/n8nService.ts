@@ -12,6 +12,8 @@ export class N8nService {
   // Kampanya verilerini çek
   async getCampaignData() {
     try {
+      console.log('n8n API isteği gönderiliyor:', this.webhookUrl);
+      
       const response = await fetch(this.webhookUrl, {
         method: 'GET',
         headers: {
@@ -19,14 +21,37 @@ export class N8nService {
         }
       });
 
+      console.log('n8n API yanıtı:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.url
+      });
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // n8n'den gelen hata detaylarını al
+        let errorDetails = '';
+        try {
+          const errorText = await response.text();
+          console.error('n8n hata detayı:', errorText);
+          errorDetails = errorText;
+        } catch (e) {
+          console.error('Hata detayı okunamadı:', e);
+        }
+        
+        throw new Error(`n8n API Hatası (${response.status}): ${response.statusText}${errorDetails ? ' - ' + errorDetails : ''}`);
       }
 
       const data = await response.json();
+      console.log('n8n'den gelen veri:', data);
       return data;
     } catch (error) {
       console.error('n8n API hatası:', error);
+      
+      // Ağ hatası mı yoksa n8n workflow hatası mı kontrol et
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('n8n sunucusuna bağlanılamıyor. Lütfen n8n instance\'ının çalıştığından emin olun.');
+      }
+      
       throw error;
     }
   }
