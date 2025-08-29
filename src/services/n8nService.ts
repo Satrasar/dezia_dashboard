@@ -39,7 +39,7 @@ export class N8nService {
     try {
       console.log('n8n API isteği gönderiliyor:', this.webhookUrl);
       
-      const response = await this.makeRequest(this.baseUrl, {
+      const response = await this.makeRequest(this.webhookUrl, {
         method: 'GET',
       });
 
@@ -175,7 +175,7 @@ export class N8nService {
   // Otomasyon eylemlerini tetikle
   async triggerAutomation(action: string, data: any) {
     try {
-      const response = await this.makeRequest(this.baseUrl, {
+      const response = await this.makeRequest(this.webhookUrl, {
         method: 'POST',
         body: JSON.stringify({
           action,
