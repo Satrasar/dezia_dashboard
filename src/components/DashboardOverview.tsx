@@ -58,6 +58,9 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       <CampaignCards 
         campaigns={campaigns} 
         onToggleStatus={onToggleStatus}
+        onViewDetails={handleViewDetails}
+      />
+
       {/* Google Ads Style Charts - n8n'den gelen gerçek veriler */}
       <GoogleAdsStyleCharts formattedKpis={formattedKpis} kpis={kpis} campaigns={campaigns} />
 
@@ -72,7 +75,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         />
       )}
     </motion.div>
-  )
   );
 };
 
