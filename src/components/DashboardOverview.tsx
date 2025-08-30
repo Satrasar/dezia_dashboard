@@ -75,6 +75,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         />
       )}
     </motion.div>
+  )
   );
 };
 
