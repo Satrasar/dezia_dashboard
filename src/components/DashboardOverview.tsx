@@ -64,6 +64,9 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       <CampaignCards 
         campaigns={campaigns} 
         onToggleStatus={onToggleStatus}
+        onViewDetails={handleViewDetails}
+      />
+
       {/* Overview Charts */}
       <OverviewCharts campaigns={campaigns} />
 
