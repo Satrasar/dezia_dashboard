@@ -51,13 +51,13 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       {/* KPI Cards */}
       <KPICards campaigns={campaigns} kpis={kpis} formattedKpis={formattedKpis} />
 
+      {/* KPI Cards */}
+      <KPICards campaigns={campaigns} kpis={kpis} formattedKpis={formattedKpis} />
+
       {/* Campaign Cards */}
       <CampaignCards 
         campaigns={campaigns} 
         onToggleStatus={onToggleStatus}
-        onViewDetails={handleViewDetails}
-      />
-
       {/* Google Ads Style Charts - n8n'den gelen gerçek veriler */}
       <GoogleAdsStyleCharts formattedKpis={formattedKpis} kpis={kpis} campaigns={campaigns} />
 
