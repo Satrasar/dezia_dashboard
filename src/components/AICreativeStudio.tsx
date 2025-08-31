@@ -127,7 +127,18 @@ const AICreativeStudio: React.FC = () => {
 
     } catch (error) {
       console.error('AI Creative generation hatası:', error);
-      alert(`Hata: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
+      
+      // More detailed error message for debugging
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
+      console.error('Detaylı hata bilgisi:', {
+        error,
+        prompt,
+        activeTab,
+        outputType,
+        hasUploadedImage: !!uploadedImage
+      });
+      
+      alert(`AI Creative Hatası: ${errorMessage}\n\nLütfen n8n workflow'unuzun aktif olduğunu ve API key'lerinin doğru ayarlandığını kontrol edin.`);
     } finally {
       setIsGenerating(false);
       setGenerationProgress('');

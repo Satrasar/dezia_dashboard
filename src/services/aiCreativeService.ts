@@ -46,6 +46,12 @@ export class AICreativeService {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for AI generation
 
+    console.log('AI Creative API Request:', {
+      url: this.baseUrl,
+      data,
+      attempt
+    });
+
     try {
       const response = await fetch(this.baseUrl, {
         method: 'POST',
@@ -58,6 +64,13 @@ export class AICreativeService {
       });
 
       clearTimeout(timeoutId);
+      
+      console.log('AI Creative API Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
       return response;
     } catch (error) {
       clearTimeout(timeoutId);
@@ -110,7 +123,17 @@ export class AICreativeService {
       const response = await this.makeRequest(requestData);
 
       if (!response.ok) {
-        throw new Error(`AI Creative API hatası (${response.status}): ${response.statusText}`);
+        // Try to get error details from response body
+        let errorDetails = response.statusText;
+        try {
+          const errorBody = await response.text();
+          console.error('AI Creative API Error Body:', errorBody);
+          errorDetails = errorBody || response.statusText;
+        } catch (e) {
+          console.error('Could not read error response body:', e);
+        }
+        
+        throw new Error(`AI Creative API hatası (${response.status}): ${errorDetails}`);
       }
 
       const result = await response.json();
@@ -151,7 +174,17 @@ export class AICreativeService {
       const response = await this.makeRequest(requestData);
 
       if (!response.ok) {
-        throw new Error(`AI Creative API hatası (${response.status}): ${response.statusText}`);
+        // Try to get error details from response body
+        let errorDetails = response.statusText;
+        try {
+          const errorBody = await response.text();
+          console.error('AI Creative API Error Body:', errorBody);
+          errorDetails = errorBody || response.statusText;
+        } catch (e) {
+          console.error('Could not read error response body:', e);
+        }
+        
+        throw new Error(`AI Creative API hatası (${response.status}): ${errorDetails}`);
       }
 
       const result = await response.json();
