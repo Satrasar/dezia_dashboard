@@ -14,6 +14,14 @@ export default defineConfig({
         secure: true,
         timeout: 30000,
         proxyTimeout: 30000,
+      },
+      '/api/ai-creative': {
+        target: 'https://ozlemkumtas.app.n8n.cloud',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ai-creative/, '/webhook/ai-creative-studio'),
+        secure: true,
+        timeout: 60000,
+        proxyTimeout: 60000,
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
             console.log('proxy error', err);

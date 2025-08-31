@@ -16,6 +16,7 @@ import {
   Play
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { aiCreativeService, AIGenerationResponse } from '../services/aiCreativeService';
 
 interface GeneratedAsset {
   id: string;
@@ -35,6 +36,7 @@ const AICreativeStudio: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [outputType, setOutputType] = useState<'image' | 'video'>('image');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState('');
   const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[]>([
     {
       id: '1',
@@ -71,26 +73,65 @@ const AICreativeStudio: React.FC = () => {
     if (!prompt || (activeTab === 'image-to-image' && !uploadedImage)) return;
 
     setIsGenerating(true);
+    setGenerationProgress('AI modeli hazırlanıyor...');
     
-    // Simulated API call
-    setTimeout(() => {
-      const newAsset: GeneratedAsset = {
-        id: Date.now().toString(),
-        type: outputType,
-        url: outputType === 'image' 
-          ? 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400'
-          : 'https://images.pexels.com/photos/3945313/pexels-photo-3945313.jpeg?auto=compress&cs=tinysrgb&w=400',
-        prompt,
-        createdAt: new Date(),
-        originalImage: activeTab === 'image-to-image' ? uploadedImage || undefined : undefined,
-        dimensions: outputType === 'image' ? '1080x1080' : '1920x1080',
-        format: outputType === 'image' ? 'PNG' : 'MP4'
-      };
+    try {
+      let result: AIGenerationResponse;
       
-      setGeneratedAssets(prev => [newAsset, ...prev]);
+      if (activeTab === 'image-to-image' && uploadedImage) {
+        setGenerationProgress('Görsel dönüştürülüyor...');
+        
+        // Convert base64 to File object
+        const response = await fetch(uploadedImage);
+        const blob = await response.blob();
+        const file = new File([blob], 'uploaded-image.png', { type: 'image/png' });
+        
+        result = await aiCreativeService.generateFromImage(file, prompt, outputType);
+      } else {
+        setGenerationProgress('İçerik oluşturuluyor...');
+        result = await aiCreativeService.generateFromPrompt(prompt, outputType);
+      }
+
+      if (result.success && result.data) {
+        // If needs polling (Replicate async)
+        if (result.data.needs_polling && result.data.prediction_id) {
+          setGenerationProgress('İşlem tamamlanıyor...');
+          const pollingResult = await aiCreativeService.pollForCompletion(result.data.prediction_id);
+          
+          if (pollingResult.success && pollingResult.data) {
+            result = pollingResult;
+          }
+        }
+
+        if (result.data?.url) {
+          const newAsset: GeneratedAsset = {
+            id: result.data.id,
+            type: result.data.type,
+            url: result.data.url,
+            prompt: result.data.prompt,
+            createdAt: new Date(result.data.created_at),
+            originalImage: activeTab === 'image-to-image' ? uploadedImage || undefined : undefined,
+            dimensions: result.data.dimensions,
+            format: result.data.format
+          };
+          
+          setGeneratedAssets(prev => [newAsset, ...prev]);
+          setPrompt('');
+          setUploadedImage(null);
+        } else {
+          throw new Error('Oluşturulan içerik URL\'i alınamadı');
+        }
+      } else {
+        throw new Error(result.error?.message || 'AI generation başarısız');
+      }
+
+    } catch (error) {
+      console.error('AI Creative generation hatası:', error);
+      alert(`Hata: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
+    } finally {
       setIsGenerating(false);
-      setPrompt('');
-    }, 3000);
+      setGenerationProgress('');
+    }
   };
 
   const handleDownload = (asset: GeneratedAsset) => {
@@ -298,7 +339,7 @@ const AICreativeStudio: React.FC = () => {
               {isGenerating ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Oluşturuluyor...</span>
+                  <span>{generationProgress || 'Oluşturuluyor...'}</span>
                 </>
               ) : (
                 <>
