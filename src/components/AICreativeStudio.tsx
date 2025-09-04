@@ -120,7 +120,7 @@ const AICreativeStudio: React.FC = () => {
             createdAt: new Date(),
             originalImage: activeTab === 'image-to-image' ? uploadedImage : undefined,
             dimensions: '1024x1024',
-          revisedPrompt: result.revisedPrompt,
+            revisedPrompt: result.revisedPrompt,
             format: 'PNG'
           };
           
@@ -131,15 +131,20 @@ const AICreativeStudio: React.FC = () => {
           // Show success message with details
           console.log('Generation successful:', {
             url: result.url,
-        console.log('✅ Generation successful!', {
-          url: result.url,
-          message: result.message,
-          revisedPrompt: result.revisedPrompt
-        });
-        
-        alert(`✅ ${result.message || 'Görsel başarıyla oluşturuldu!'}`);
-      } else {
-        throw new Error(result.error?.message || 'Oluşturulan içerik URL\'i alınamadı');
+            message: result.message,
+            revisedPrompt: result.revisedPrompt
+          });
+          
+          console.log('✅ Generation successful!', {
+            url: result.url,
+            message: result.message,
+            revisedPrompt: result.revisedPrompt
+          });
+          
+          alert(`✅ ${result.message || 'Görsel başarıyla oluşturuldu!'}`);
+        } else {
+          throw new Error(result.error?.message || 'Oluşturulan içerik URL\'i alınamadı');
+        }
       }
 
     } catch (error) {
