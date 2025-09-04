@@ -108,16 +108,27 @@ const AICreativeStudio: React.FC = () => {
             id: result.data.id,
             type: result.data.type,
             url: result.data.url,
-          id: Date.now().toString(),
-          type: result.type || outputType,
-          url: result.url,
-          prompt: prompt,
-          createdAt: new Date(),
+            id: Date.now().toString(),
+            type: result.outputType || result.type || outputType,
+            url: result.url!,
+            prompt: prompt,
+            createdAt: new Date(),
+            originalImage: activeTab === 'image-to-image' ? uploadedImage : undefined,
+            dimensions: '1024x1024',
+            format: 'PNG'
           };
-          dimensions: '1024x1024',
-          format: 'PNG'
+          
+          setGeneratedAssets(prev => [newAsset, ...prev]);
           setPrompt('');
           setUploadedImage(null);
+          
+          // Show success message with details
+          console.log('Generation successful:', {
+            url: result.url,
+            originalPrompt: result.originalPrompt,
+            enhancedPrompt: result.enhancedPrompt,
+            revisedPrompt: result.revisedPrompt
+          });
         } else {
           throw new Error('Oluşturulan içerik URL\'i alınamadı');
         }
@@ -138,7 +149,7 @@ const AICreativeStudio: React.FC = () => {
         hasUploadedImage: !!uploadedImage
       });
       
-      alert(`AI Creative Hatası: ${errorMessage}\n\nLütfen n8n workflow'unuzun aktif olduğunu ve API key'lerinin doğru ayarlandığını kontrol edin.`);
+      alert(`AI Creative Hatası: ${errorMessage}\n\nLütfen n8n workflow'unuzun aktif olduğunu kontrol edin.\nWebhook URL: /webhook/ai-visual-studio`);
     } finally {
       setIsGenerating(false);
       setGenerationProgress('');
