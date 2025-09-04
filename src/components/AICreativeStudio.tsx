@@ -101,6 +101,8 @@ const AICreativeStudio: React.FC = () => {
       console.log('Generation result:', result);
 
       if (result.success && result.data) {
+        console.log('✅ Başarılı! Yeni asset ekleniyor:', result.url);
+        
         // If needs polling (Replicate async)
         if (result.data.needs_polling && result.data.prediction_id) {
           setGenerationProgress('İşlem tamamlanıyor...');
@@ -115,28 +117,23 @@ const AICreativeStudio: React.FC = () => {
           const newAsset: GeneratedAsset = {
             id: Date.now().toString(),
             type: result.type || outputType,
-            url: result.url!,
+          type: (result.type || outputType) as 'image' | 'video',
             prompt: prompt,
             createdAt: new Date(),
             originalImage: activeTab === 'image-to-image' ? uploadedImage : undefined,
             dimensions: '1024x1024',
             revisedPrompt: result.revisedPrompt,
-            format: 'PNG'
+          revisedPrompt: result.revisedPrompt || undefined,
           };
           
           setGeneratedAssets(prev => [newAsset, ...prev]);
+        console.log('Eklenen asset:', newAsset);
           setPrompt('');
+        console.log('Asset listesi güncellendi');
           setUploadedImage(null);
           
           // Show success message with details
-          console.log('✅ Generation successful!', {
-            url: result.url,
-            message: result.message,
-            revisedPrompt: result.revisedPrompt
-          });
-          
-          alert(`✅ ${result.message || 'Görsel başarıyla oluşturuldu!'}`);
-        } else {
+        alert(`✅ ${result.message || 'Görsel başarıyla oluşturuldu!'}\n\nURL: ${result.url}`);
           throw new Error(result.error?.message || 'Oluşturulan içerik URL\'i alınamadı');
         }
       }
