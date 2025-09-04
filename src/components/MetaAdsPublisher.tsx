@@ -799,11 +799,11 @@ const MetaAdsPublisher: React.FC = () => {
           <h3 className={`text-lg font-semibold ${
             isDark ? 'text-white' : 'text-gray-900'
           }`}>
-            Gerçek Kampanyalar ({campaigns.length})
+            Aktif Kampanyalar ({campaigns.filter(c => c.status === 'active').length})
           </h3>
           
           <div className="space-y-3">
-            {campaigns.map((campaign) => (
+            {campaigns.filter(campaign => campaign.status === 'active').map((campaign) => (
               <motion.div
                 key={campaign.id}
                 initial={{ opacity: 0, scale: 0.9 }}

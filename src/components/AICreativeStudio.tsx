@@ -374,7 +374,7 @@ const AICreativeStudio: React.FC = () => {
                 <h4 className={`text-lg font-semibold mb-3 ${
                   isDark ? 'text-white' : 'text-gray-900'
                 }`}>
-                  ✨ Oluşturulan Görsel
+                  ✨ Oluşturulan {activeTab === 'image-to-image' ? 'Görsel (Image-to-Image)' : 'Görsel (Text-to-Image)'}
                 </h4>
                 
                 <div className="text-center">
