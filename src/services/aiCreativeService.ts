@@ -28,7 +28,7 @@ export interface AIGenerationResponse {
 }
 
 export class AICreativeService {
-  private baseUrl = 'https://ozlemkumtas.app.n8n.cloud/webhook/ai-visual-studio'; // Production URL
+  private baseUrl = '/api/ai-creative'; // Use Vite proxy
   private maxRetries = 2;
   private retryDelay = 1000;
 
