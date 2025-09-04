@@ -36,8 +36,10 @@ const AICreativeStudio: React.FC = () => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [imagePrompt, setImagePrompt] = useState('');
   const [textPrompt, setTextPrompt] = useState('');
+  const [textPrompt, setTextPrompt] = useState('');
   const [outputType, setOutputType] = useState<'image' | 'video'>('image');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [lastGeneratedResult, setLastGeneratedResult] = useState<any>(null);
   const [lastGeneratedResult, setLastGeneratedResult] = useState<any>(null);
   const [generationProgress, setGenerationProgress] = useState('');
   const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[]>([
@@ -380,6 +382,68 @@ const AICreativeStudio: React.FC = () => {
                 </>
               )}
             </button>
+
+            {/* Generated Result Display */}
+            {lastGeneratedResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mt-6 ${
+                  isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                } border rounded-lg p-4`}
+              >
+                <h4 className={`text-lg font-semibold mb-3 ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
+                  ✨ Oluşturulan Görsel
+                </h4>
+                
+                <div className="text-center">
+                  <img 
+                    src={lastGeneratedResult.url} 
+                    alt="Generated content"
+                    className="max-w-full h-auto rounded-lg shadow-lg mx-auto mb-4"
+                    style={{ maxHeight: '400px' }}
+                  />
+                  
+                  <div className={`text-sm space-y-2 ${
+                    isDark ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
+                    <p><strong>Orijinal Prompt:</strong> {lastGeneratedResult.originalPrompt}</p>
+                    {lastGeneratedResult.revisedPrompt && (
+                      <p><strong>DALL-E Revised:</strong> {lastGeneratedResult.revisedPrompt}</p>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-center space-x-3 mt-4">
+                    <button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = lastGeneratedResult.url;
+                        link.download = `ai-generated-${Date.now()}.png`;
+                        link.click();
+                      }}
+                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>İndir</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => setLastGeneratedResult(null)}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                        isDark 
+                          ? 'bg-gray-600 hover:bg-gray-500 text-white' 
+                          : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                      }`}
+                    >
+                      <X className="w-4 h-4" />
+                      <span>Kapat</span>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* Generated Result Display */}
             {lastGeneratedResult && (
