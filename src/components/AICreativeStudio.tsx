@@ -34,9 +34,11 @@ const AICreativeStudio: React.FC = () => {
   const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<'image-to-image' | 'prompt-to-media'>('image-to-image');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [prompt, setPrompt] = useState('');
+  const [imagePrompt, setImagePrompt] = useState('');
+  const [textPrompt, setTextPrompt] = useState('');
   const [outputType, setOutputType] = useState<'image' | 'video'>('image');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [lastGeneratedResult, setLastGeneratedResult] = useState<any>(null);
   const [generationProgress, setGenerationProgress] = useState('');
   const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[]>([
     {
@@ -71,9 +73,12 @@ const AICreativeStudio: React.FC = () => {
   };
 
   const handleGenerate = async () => {
-    if (!prompt || (activeTab === 'image-to-image' && !uploadedImage)) return;
+    const currentPrompt = activeTab === 'image-to-image' ? imagePrompt : textPrompt;
+    
+    if (!currentPrompt || (activeTab === 'image-to-image' && !uploadedImage)) return;
 
     setIsGenerating(true);
+    setLastGeneratedResult(null);
     
     try {
       let result: AIGenerationResponse;
@@ -92,16 +97,19 @@ const AICreativeStudio: React.FC = () => {
           type: file.type
         });
         
-        result = await aiCreativeService.generateFromImage(file, prompt, outputType);
+        result = await aiCreativeService.generateFromImage(file, currentPrompt, outputType);
       } else {
         console.log('Text-to-Image mode: Generating from prompt...');
-        result = await aiCreativeService.generateFromPrompt(prompt, outputType);
+        result = await aiCreativeService.generateFromPrompt(currentPrompt, outputType);
       }
 
       console.log('Generation result:', result);
 
       if (result.success && result.data) {
         console.log('✅ Başarılı! Yeni asset ekleniyor:', result.url);
+        
+        // Önce sonucu göster
+        setLastGeneratedResult(result);
         
         // If needs polling (Replicate async)
         if (result.data.needs_polling && result.data.prediction_id) {
@@ -119,7 +127,7 @@ const AICreativeStudio: React.FC = () => {
             type: result.type || outputType,
           type: (result.type || outputType) as 'image' | 'video',
             prompt: prompt,
-            createdAt: new Date(),
+          prompt: currentPrompt,
             originalImage: activeTab === 'image-to-image' ? uploadedImage : undefined,
             dimensions: '1024x1024',
             revisedPrompt: result.revisedPrompt,
@@ -129,7 +137,11 @@ const AICreativeStudio: React.FC = () => {
           setGeneratedAssets(prev => [newAsset, ...prev]);
         console.log('Eklenen asset:', newAsset);
           setPrompt('');
-        console.log('Asset listesi güncellendi');
+        if (activeTab === 'image-to-image') {
+          setImagePrompt('');
+        } else {
+          setTextPrompt('');
+        }
           setUploadedImage(null);
           
           // Show success message with details
@@ -287,8 +299,14 @@ const AICreativeStudio: React.FC = () => {
                 AI Prompt
               </label>
               <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
+                value={activeTab === 'image-to-image' ? imagePrompt : textPrompt}
+                onChange={(e) => {
+                  if (activeTab === 'image-to-image') {
+                    setImagePrompt(e.target.value);
+                  } else {
+                    setTextPrompt(e.target.value);
+                  }
+                }}
                 placeholder={
                   activeTab === 'image-to-image' 
                     ? "Bu görseli nasıl dönüştürmek istiyorsunuz? Örn: 'Modern minimalist stil, soft lighting, premium görünüm'"
@@ -343,9 +361,9 @@ const AICreativeStudio: React.FC = () => {
             {/* Generate Button */}
             <button
               onClick={handleGenerate}
-              disabled={isGenerating || !prompt || (activeTab === 'image-to-image' && !uploadedImage)}
+              disabled={isGenerating || !(activeTab === 'image-to-image' ? imagePrompt : textPrompt) || (activeTab === 'image-to-image' && !uploadedImage)}
               className={`w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors ${
-                isGenerating || !prompt || (activeTab === 'image-to-image' && !uploadedImage)
+                isGenerating || !(activeTab === 'image-to-image' ? imagePrompt : textPrompt) || (activeTab === 'image-to-image' && !uploadedImage)
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700 text-white'
               }`}
@@ -362,6 +380,68 @@ const AICreativeStudio: React.FC = () => {
                 </>
               )}
             </button>
+
+            {/* Generated Result Display */}
+            {lastGeneratedResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mt-6 ${
+                  isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                } border rounded-lg p-4`}
+              >
+                <h4 className={`text-lg font-semibold mb-3 ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
+                  ✨ Oluşturulan Görsel
+                </h4>
+                
+                <div className="text-center">
+                  <img 
+                    src={lastGeneratedResult.url} 
+                    alt="Generated content"
+                    className="max-w-full h-auto rounded-lg shadow-lg mx-auto mb-4"
+                    style={{ maxHeight: '400px' }}
+                  />
+                  
+                  <div className={`text-sm space-y-2 ${
+                    isDark ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
+                    <p><strong>Orijinal Prompt:</strong> {lastGeneratedResult.originalPrompt}</p>
+                    {lastGeneratedResult.revisedPrompt && (
+                      <p><strong>DALL-E Revised:</strong> {lastGeneratedResult.revisedPrompt}</p>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-center space-x-3 mt-4">
+                    <button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = lastGeneratedResult.url;
+                        link.download = `ai-generated-${Date.now()}.png`;
+                        link.click();
+                      }}
+                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>İndir</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => setLastGeneratedResult(null)}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                        isDark 
+                          ? 'bg-gray-600 hover:bg-gray-500 text-white' 
+                          : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                      }`}
+                    >
+                      <X className="w-4 h-4" />
+                      <span>Kapat</span>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </motion.div>
         </div>
 
