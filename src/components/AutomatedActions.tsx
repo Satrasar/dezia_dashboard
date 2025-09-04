@@ -103,6 +103,10 @@ const AutomatedActions: React.FC = () => {
       alert('❌ Otomasyon durumu değiştirilemedi. Lütfen tekrar deneyin.');
     }
   };
+
+  const toggleAutomationOld = async (id: number) => {
+    try {
+      const response = await fetch('/api/n8n/automation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
