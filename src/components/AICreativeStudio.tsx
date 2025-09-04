@@ -144,7 +144,12 @@ const AICreativeStudio: React.FC = () => {
         hasUploadedImage: !!uploadedImage
       });
       
-      alert(`AI Creative Hatası: ${errorMessage}\n\nLütfen n8n workflow'unuzun aktif olduğunu kontrol edin.\nWebhook URL: /webhook/ai-visual-studio`);
+      // Show user-friendly error message
+      if (errorMessage.includes('n8n workflow hatası')) {
+        alert(`${errorMessage}\n\nKontrol edilecekler:\n• n8n workflow'u aktif mi?\n• OpenAI API key'i doğru mu?\n• Webhook URL'i: /webhook/ai-visual-studio`);
+      } else {
+        alert(`AI Creative Hatası: ${errorMessage}\n\nLütfen n8n workflow'unuzun aktif olduğunu kontrol edin.`);
+      }
     } finally {
       setIsGenerating(false);
       setGenerationProgress('');
