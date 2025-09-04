@@ -14,6 +14,7 @@ export interface AIGenerationRequest {
 export interface AIGenerationResponse {
   success: boolean;
   url?: string;
+  imageUrl?: string; // Alternative field name
   type?: 'image' | 'video';
   outputType?: string;
   message?: string;
@@ -45,7 +46,8 @@ export class AICreativeService {
       attempt,
       formMode: requestData.formMode,
       hasImage: !!requestData.image,
-      promptLength: requestData.prompt.length
+      promptLength: requestData.prompt.length,
+      outputType: requestData.outputType
     });
 
     try {
@@ -90,7 +92,7 @@ export class AICreativeService {
     });
   }
 
-  // Generate image from image (image-to-image)
+  // Generate image from image (image-to-image) - HTML test sayfasıyla aynı format
   async generateFromImage(
     imageFile: File, 
     prompt: string, 
@@ -99,7 +101,7 @@ export class AICreativeService {
     try {
       console.log('AI Creative: Image-to-Image generation başlatılıyor...', prompt);
       
-      // Convert file to base64
+      // Convert file to base64 - HTML test sayfasıyla aynı yöntem
       const base64Data = await this.fileToBase64(imageFile);
       
       // Remove the data:image/jpeg;base64, prefix to get only base64 data
@@ -132,46 +134,24 @@ export class AICreativeService {
       const response = await this.makeRequest(requestData);
 
       if (!response.ok) {
-        let errorDetails = `HTTP ${response.status}: ${response.statusText}`;
-        try {
-          const errorBody = await response.text();
-          
-          // Check if response is HTML (n8n error page)
-          if (errorBody.includes('<!DOCTYPE html>') || errorBody.includes('<html')) {
-            console.error('n8n workflow returned HTML error page:', errorBody);
-            errorDetails = `n8n workflow hatası - Lütfen n8n dashboard'unuzda workflow'u kontrol edin. HTTP ${response.status}`;
-          } else {
-            console.error('AI Creative API Error Body:', errorBody);
-            errorDetails = errorBody || response.statusText;
-          }
-        } catch (e) {
-          console.error('Could not read error response body:', e);
-        }
-        
-        throw new Error(errorDetails);
+        const errorText = await response.text();
+        console.error('AI Creative API Error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
       console.log('AI Creative: Image-to-Image başarılı', result);
       
-      // n8n workflow response formatını kontrol et
-      if (result.success && result.url) {
+      // n8n workflow response formatını kontrol et - HTML test sayfasıyla uyumlu
+      if (result.success && (result.url || result.imageUrl)) {
         return {
           success: true,
-          url: result.url,
+          url: result.url || result.imageUrl,
           type: result.type || 'image',
-          message: result.message,
-          revisedPrompt: result.revisedPrompt,
-          originalPrompt: result.originalPrompt || prompt
-        };
-      } else if (result.imageUrl) {
-        // Alternatif response format
-        return {
-          success: true,
-          url: result.imageUrl,
-          type: result.outputType || 'image',
+          outputType: result.outputType || outputType,
           message: result.message || 'Görsel başarıyla oluşturuldu',
-          revisedPrompt: result.revisedPrompt
+          revisedPrompt: result.revisedPrompt,
+          originalPrompt: prompt
         };
       } else {
         console.error('Unexpected response format:', result);
@@ -191,7 +171,7 @@ export class AICreativeService {
     }
   }
 
-  // Generate media from prompt (text-to-image)
+  // Generate media from prompt (text-to-image) - HTML test sayfasıyla aynı format
   async generateFromPrompt(
     prompt: string, 
     outputType: 'image' | 'video' = 'image'
@@ -211,46 +191,24 @@ export class AICreativeService {
       const response = await this.makeRequest(requestData);
 
       if (!response.ok) {
-        let errorDetails = `HTTP ${response.status}: ${response.statusText}`;
-        try {
-          const errorBody = await response.text();
-          
-          // Check if response is HTML (n8n error page)
-          if (errorBody.includes('<!DOCTYPE html>') || errorBody.includes('<html')) {
-            console.error('n8n workflow returned HTML error page:', errorBody);
-            errorDetails = `n8n workflow hatası - Lütfen n8n dashboard'unuzda workflow'u kontrol edin. HTTP ${response.status}`;
-          } else {
-            console.error('AI Creative API Error Body:', errorBody);
-            errorDetails = errorBody || response.statusText;
-          }
-        } catch (e) {
-          console.error('Could not read error response body:', e);
-        }
-        
-        throw new Error(errorDetails);
+        const errorText = await response.text();
+        console.error('AI Creative API Error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
       console.log('AI Creative: Text-to-Image başarılı', result);
       
-      // n8n workflow response formatını kontrol et
-      if (result.success && result.url) {
+      // n8n workflow response formatını kontrol et - HTML test sayfasıyla uyumlu
+      if (result.success && (result.url || result.imageUrl)) {
         return {
           success: true,
-          url: result.url,
+          url: result.url || result.imageUrl,
           type: result.type || 'image',
-          message: result.message,
-          revisedPrompt: result.revisedPrompt,
-          originalPrompt: result.originalPrompt || prompt
-        };
-      } else if (result.imageUrl) {
-        // Alternatif response format
-        return {
-          success: true,
-          url: result.imageUrl,
-          type: result.outputType || 'image',
+          outputType: result.outputType || outputType,
           message: result.message || 'Görsel başarıyla oluşturuldu',
-          revisedPrompt: result.revisedPrompt
+          revisedPrompt: result.revisedPrompt,
+          originalPrompt: prompt
         };
       } else {
         console.error('Unexpected response format:', result);

@@ -23,6 +23,7 @@ interface GeneratedAsset {
   type: 'image' | 'video';
   url: string;
   prompt: string;
+  revisedPrompt?: string;
   createdAt: Date;
   originalImage?: string;
   dimensions: string;
@@ -73,24 +74,31 @@ const AICreativeStudio: React.FC = () => {
     if (!prompt || (activeTab === 'image-to-image' && !uploadedImage)) return;
 
     setIsGenerating(true);
-    setGenerationProgress('AI modeli hazırlanıyor...');
     
     try {
       let result: AIGenerationResponse;
       
       if (activeTab === 'image-to-image' && uploadedImage) {
-        setGenerationProgress('Görsel dönüştürülüyor...');
+        console.log('Image-to-Image mode: Converting uploaded image...');
         
         // Convert base64 to File object
         const response = await fetch(uploadedImage);
         const blob = await response.blob();
         const file = new File([blob], 'uploaded-image.png', { type: 'image/png' });
         
+        console.log('File prepared:', {
+          name: file.name,
+          size: file.size,
+          type: file.type
+        });
+        
         result = await aiCreativeService.generateFromImage(file, prompt, outputType);
       } else {
-        setGenerationProgress('İçerik oluşturuluyor...');
+        console.log('Text-to-Image mode: Generating from prompt...');
         result = await aiCreativeService.generateFromPrompt(prompt, outputType);
       }
+
+      console.log('Generation result:', result);
 
       if (result.success && result.data) {
         // If needs polling (Replicate async)
@@ -112,6 +120,7 @@ const AICreativeStudio: React.FC = () => {
             createdAt: new Date(),
             originalImage: activeTab === 'image-to-image' ? uploadedImage : undefined,
             dimensions: '1024x1024',
+          revisedPrompt: result.revisedPrompt,
             format: 'PNG'
           };
           
@@ -122,11 +131,13 @@ const AICreativeStudio: React.FC = () => {
           // Show success message with details
           console.log('Generation successful:', {
             url: result.url,
-            revisedPrompt: result.revisedPrompt
-          });
-        } else {
-          throw new Error('Oluşturulan içerik URL\'i alınamadı. Response: ' + JSON.stringify(result));
-        }
+        console.log('✅ Generation successful!', {
+          url: result.url,
+          message: result.message,
+          revisedPrompt: result.revisedPrompt
+        });
+        
+        alert(`✅ ${result.message || 'Görsel başarıyla oluşturuldu!'}`);
       } else {
         throw new Error(result.error?.message || 'Oluşturulan içerik URL\'i alınamadı');
       }
@@ -134,25 +145,10 @@ const AICreativeStudio: React.FC = () => {
     } catch (error) {
       console.error('AI Creative generation hatası:', error);
       
-      // More detailed error message for debugging
       const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
-      console.error('Detaylı hata bilgisi:', {
-        error,
-        prompt,
-        activeTab,
-        outputType,
-        hasUploadedImage: !!uploadedImage
-      });
-      
-      // Show user-friendly error message
-      if (errorMessage.includes('n8n workflow hatası')) {
-        alert(`${errorMessage}\n\nKontrol edilecekler:\n• n8n workflow'u aktif mi?\n• OpenAI API key'i doğru mu?\n• Webhook URL'i: /webhook/ai-visual-studio`);
-      } else {
-        alert(`AI Creative Hatası: ${errorMessage}\n\nLütfen n8n workflow'unuzun aktif olduğunu kontrol edin.`);
-      }
+      alert('❌ Bir hata oluştu: ' + errorMessage);
     } finally {
       setIsGenerating(false);
-      setGenerationProgress('');
     }
   };
 
@@ -361,7 +357,7 @@ const AICreativeStudio: React.FC = () => {
               {isGenerating ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>{generationProgress || 'Oluşturuluyor...'}</span>
+                  <span>⏳ Oluşturuluyor...</span>
                 </>
               ) : (
                 <>
@@ -415,6 +411,13 @@ const AICreativeStudio: React.FC = () => {
                     }`}>
                       {asset.prompt}
                     </p>
+                    {asset.revisedPrompt && (
+                      <p className={`text-xs mt-1 truncate ${
+                        isDark ? 'text-blue-400' : 'text-blue-600'
+                      }`}>
+                        DALL-E: {asset.revisedPrompt}
+                      </p>
+                    )}
                     <p className={`text-xs mt-1 ${
                       isDark ? 'text-gray-500' : 'text-gray-400'
                     }`}>
