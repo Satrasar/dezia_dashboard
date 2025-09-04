@@ -17,22 +17,12 @@ import {
   X
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAssets } from '../contexts/AssetsContext';
 import { aiCreativeService, AIGenerationResponse } from '../services/aiCreativeService';
-
-interface GeneratedAsset {
-  id: string;
-  type: 'image' | 'video';
-  url: string;
-  prompt: string;
-  createdAt: Date;
-  originalImage?: string;
-  dimensions: string;
-  format: string;
-  revisedPrompt?: string;
-}
 
 const AICreativeStudio: React.FC = () => {
   const { isDark } = useTheme();
+  const { generatedAssets, addAsset, removeAsset } = useAssets();
   const [activeTab, setActiveTab] = useState<'image-to-image' | 'prompt-to-media'>('image-to-image');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [imagePrompt, setImagePrompt] = useState('');
@@ -40,27 +30,6 @@ const AICreativeStudio: React.FC = () => {
   const [outputType, setOutputType] = useState<'image' | 'video'>('image');
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastGeneratedResult, setLastGeneratedResult] = useState<any>(null);
-  const [generationProgress, setGenerationProgress] = useState('');
-  const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[]>([
-    {
-      id: '1',
-      type: 'image',
-      url: 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400',
-      prompt: 'Modern minimalist product showcase with soft lighting',
-      createdAt: new Date(Date.now() - 3600000),
-      dimensions: '1080x1080',
-      format: 'PNG'
-    },
-    {
-      id: '2',
-      type: 'video',
-      url: 'https://images.pexels.com/photos/3945313/pexels-photo-3945313.jpeg?auto=compress&cs=tinysrgb&w=400',
-      prompt: 'Dynamic product rotation with particles effect',
-      createdAt: new Date(Date.now() - 7200000),
-      dimensions: '1920x1080',
-      format: 'MP4'
-    }
-  ]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -124,20 +93,15 @@ const AICreativeStudio: React.FC = () => {
         setLastGeneratedResult(displayResult);
         
         // Listeye de ekle
-        const newAsset: GeneratedAsset = {
-          id: Date.now().toString(),
+        addAsset({
           type: (result.type || outputType) as 'image' | 'video',
           url: result.url,
           prompt: currentPrompt,
-          createdAt: new Date(),
           originalImage: activeTab === 'image-to-image' ? uploadedImage : undefined,
           dimensions: '1024x1024',
           format: 'PNG',
           revisedPrompt: result.revisedPrompt || undefined
-        };
-        
-        setGeneratedAssets(prev => [newAsset, ...prev]);
-        console.log('Eklenen asset:', newAsset);
+        });
         
         // Form temizle
         if (activeTab === 'image-to-image') {
@@ -170,7 +134,7 @@ const AICreativeStudio: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    setGeneratedAssets(prev => prev.filter(asset => asset.id !== id));
+    removeAsset(id);
   };
 
   return (

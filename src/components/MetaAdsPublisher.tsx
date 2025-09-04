@@ -19,6 +19,7 @@ import {
   Instagram
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAssets } from '../contexts/AssetsContext';
 
 interface AdCampaign {
   id: string;
@@ -47,6 +48,7 @@ interface AdCampaign {
 
 const MetaAdsPublisher: React.FC = () => {
   const { isDark } = useTheme();
+  const { generatedAssets } = useAssets();
   const [selectedCreative, setSelectedCreative] = useState<any>(null);
   const [adForm, setAdForm] = useState({
     campaignName: '',
@@ -97,19 +99,33 @@ const MetaAdsPublisher: React.FC = () => {
     }
   ]);
 
+  // AI Creative Studio'dan gelen görselleri kullan + örnek görseller
   const availableCreatives = [
-    {
-      id: '1',
-      type: 'image',
-      url: 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400',
-      prompt: 'Modern minimalist product showcase'
-    },
-    {
-      id: '2',
-      type: 'video',
-      url: 'https://images.pexels.com/photos/3945313/pexels-photo-3945313.jpeg?auto=compress&cs=tinysrgb&w=400',
-      prompt: 'Dynamic product rotation'
-    }
+    ...generatedAssets.map(asset => ({
+      id: asset.id,
+      type: asset.type,
+      url: asset.url,
+      prompt: asset.prompt,
+      isAIGenerated: true,
+      revisedPrompt: asset.revisedPrompt
+    })),
+    // Örnek görseller (eğer AI görseli yoksa)
+    ...(generatedAssets.length === 0 ? [
+      {
+        id: 'sample-1',
+        type: 'image' as const,
+        url: 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400',
+        prompt: 'Modern minimalist product showcase',
+        isAIGenerated: false
+      },
+      {
+        id: 'sample-2',
+        type: 'video' as const,
+        url: 'https://images.pexels.com/photos/3945313/pexels-photo-3945313.jpeg?auto=compress&cs=tinysrgb&w=400',
+        prompt: 'Dynamic product rotation',
+        isAIGenerated: false
+      }
+    ] : [])
   ];
 
   const callToActionOptions = [
@@ -263,6 +279,15 @@ const MetaAdsPublisher: React.FC = () => {
                       <Play className="w-5 h-5 text-white bg-black/50 rounded p-1" />
                     )}
                   </div>
+                  {/* AI Generated Badge */}
+                  {creative.isAIGenerated && (
+                    <div className="absolute top-2 left-2">
+                      <div className="bg-purple-500 text-white text-xs px-2 py-1 rounded-full flex items-center space-x-1">
+                        <Sparkles className="w-3 h-3" />
+                        <span>AI</span>
+                      </div>
+                    </div>
+                  )}
                   {selectedCreative?.id === creative.id && (
                     <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
                       <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
@@ -270,6 +295,10 @@ const MetaAdsPublisher: React.FC = () => {
                       </div>
                     </div>
                   )}
+                  {/* Prompt Tooltip */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-2">
+                    <p className="truncate">{creative.prompt}</p>
+                  </div>
                 </div>
               ))}
             </div>
