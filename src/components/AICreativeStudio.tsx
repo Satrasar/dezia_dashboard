@@ -137,6 +137,7 @@ const AICreativeStudio: React.FC = () => {
           
           setGeneratedAssets(prev => [newAsset, ...prev]);
           console.log('Eklenen asset:', newAsset);
+          
           if (activeTab === 'image-to-image') {
             setImagePrompt('');
           } else {
