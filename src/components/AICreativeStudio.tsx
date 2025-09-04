@@ -109,47 +109,46 @@ const AICreativeStudio: React.FC = () => {
       if (result.success && result.data) {
         console.log('✅ Başarılı! Yeni asset ekleniyor:', result.url);
         
-        // Önce sonucu göster
-        setLastGeneratedResult(result);
+        // Önce sonucu göster - state'i doğru güncelle
+        const displayResult = {
+          success: true,
+          url: result.url,
+          type: result.type || outputType,
+          outputType: result.outputType || outputType,
+          message: result.message || 'Görsel başarıyla oluşturuldu!',
+          originalPrompt: currentPrompt,
+          revisedPrompt: result.revisedPrompt
+        };
         
-        // If needs polling (Replicate async)
-        if (result.data.needs_polling && result.data.prediction_id) {
-          setGenerationProgress('İşlem tamamlanıyor...');
-          const pollingResult = await aiCreativeService.pollForCompletion(result.data.prediction_id);
-          
-          if (pollingResult.success && pollingResult.data) {
-            result = pollingResult;
-          }
-        }
-
-        if (result.success && result.url) {
-          const newAsset: GeneratedAsset = {
-            id: Date.now().toString(),
-            type: (result.type || outputType) as 'image' | 'video',
-            url: result.url,
-            prompt: currentPrompt,
-            createdAt: new Date(),
-            originalImage: activeTab === 'image-to-image' ? uploadedImage : undefined,
-            dimensions: '1024x1024',
-            format: 'PNG',
-            revisedPrompt: result.revisedPrompt || undefined
-          };
-          
-          setGeneratedAssets(prev => [newAsset, ...prev]);
-          console.log('Eklenen asset:', newAsset);
-          
-          if (activeTab === 'image-to-image') {
-            setImagePrompt('');
-          } else {
-            setTextPrompt('');
-          }
-          setUploadedImage(null);
-          
-          // Show success message with details
-          alert(`✅ ${result.message || 'Görsel başarıyla oluşturuldu!'}\n\nURL: ${result.url}`);
+        console.log('Setting lastGeneratedResult:', displayResult);
+        setLastGeneratedResult(displayResult);
+        
+        // Listeye de ekle
+        const newAsset: GeneratedAsset = {
+          id: Date.now().toString(),
+          type: (result.type || outputType) as 'image' | 'video',
+          url: result.url,
+          prompt: currentPrompt,
+          createdAt: new Date(),
+          originalImage: activeTab === 'image-to-image' ? uploadedImage : undefined,
+          dimensions: '1024x1024',
+          format: 'PNG',
+          revisedPrompt: result.revisedPrompt || undefined
+        };
+        
+        setGeneratedAssets(prev => [newAsset, ...prev]);
+        console.log('Eklenen asset:', newAsset);
+        
+        // Form temizle
+        if (activeTab === 'image-to-image') {
+          setImagePrompt('');
         } else {
-          throw new Error(result.error?.message || 'Oluşturulan içerik URL\'i alınamadı');
+          setTextPrompt('');
         }
+        setUploadedImage(null);
+      } else {
+        console.error('Response başarısız veya URL yok:', result);
+        throw new Error(result.error?.message || 'Oluşturulan içerik URL\'i alınamadı');
       }
 
     } catch (error) {
