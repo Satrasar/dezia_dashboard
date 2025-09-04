@@ -106,7 +106,7 @@ const AICreativeStudio: React.FC = () => {
 
       console.log('Generation result:', result);
 
-      if (result.success && result.data) {
+      if (result.success && result.url) {
         console.log('✅ Başarılı! Yeni asset ekleniyor:', result.url);
         
         // Önce sonucu göster - state'i doğru güncelle
