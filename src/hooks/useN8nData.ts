@@ -90,6 +90,19 @@ export const useN8nData = () => {
         impressions: camp.impressions || 0,
         clicks: camp.clicks || 0,
         conversions: camp.conversions || 0,
+        // Meta Ads için ek bilgiler
+        creative: {
+          type: 'image' as const,
+          url: camp.creative_url || 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400',
+          title: camp.creative_title || camp.name,
+          description: camp.creative_description || 'Kampanya açıklaması'
+        },
+        targeting: {
+          audience: camp.audience_name || 'Genel Hedef Kitle',
+          ageRange: `${camp.age_min || 18}-${camp.age_max || 65}`,
+          location: camp.location || 'Türkiye',
+          interests: camp.interests ? camp.interests.split(',') : ['Genel']
+        }
       }));
 
       console.log('Dönüştürülmüş kampanyalar:', transformedCampaigns);

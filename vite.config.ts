@@ -15,6 +15,14 @@ export default defineConfig({
         timeout: 30000,
         proxyTimeout: 30000,
       },
+      '/api/n8n/automation': {
+        target: 'https://ozlemkumtas.app.n8n.cloud',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/n8n\/automation/, '/webhook/automation-control'),
+        secure: true,
+        timeout: 30000,
+        proxyTimeout: 30000,
+      },
       '/api/ai-creative': {
         target: 'https://ozlemkumtas.app.n8n.cloud/webhook/ai-visual-studio',
         changeOrigin: true,

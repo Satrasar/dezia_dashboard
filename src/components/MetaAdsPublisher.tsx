@@ -51,6 +51,8 @@ const MetaAdsPublisher: React.FC = () => {
   const { generatedAssets } = useAssets();
   const [selectedCreative, setSelectedCreative] = useState<any>(null);
   const [viewingCreative, setViewingCreative] = useState<any>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFilePreview, setUploadedFilePreview] = useState<string | null>(null);
   const [adForm, setAdForm] = useState({
     campaignName: '',
     adTitle: '',
@@ -102,6 +104,15 @@ const MetaAdsPublisher: React.FC = () => {
 
   // AI Creative Studio'dan gelen görselleri kullan + örnek görseller
   const availableCreatives = [
+    // Kullanıcının yüklediği dosya
+    ...(uploadedFile && uploadedFilePreview ? [{
+      id: 'uploaded-file',
+      type: uploadedFile.type.startsWith('video/') ? 'video' as const : 'image' as const,
+      url: uploadedFilePreview,
+      prompt: `Kullanıcı tarafından yüklenen ${uploadedFile.name}`,
+      isAIGenerated: false,
+      isUserUploaded: true
+    }] : []),
     ...generatedAssets.map(asset => ({
       id: asset.id,
       type: asset.type,
@@ -141,6 +152,18 @@ const MetaAdsPublisher: React.FC = () => {
     'Moda', 'Teknoloji', 'Spor', 'Seyahat', 'Yemek', 'Müzik', 
     'Sanat', 'Eğitim', 'Sağlık', 'Güzellik', 'Otomobil', 'Emlak'
   ];
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setUploadedFilePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleAITargeting = () => {
     // AI ile görsel analizi yaparak hedef kitle önerisi
@@ -255,6 +278,44 @@ const MetaAdsPublisher: React.FC = () => {
               1. Kreatif Seçimi
             </h3>
             
+            {/* File Upload Section */}
+            <div className="mb-6">
+              <div className={`border-2 border-dashed rounded-lg p-4 text-center ${
+                isDark 
+                  ? 'border-gray-600 bg-gray-700/30' 
+                  : 'border-gray-300 bg-gray-50'
+              }`}>
+                <div className="flex items-center justify-center space-x-4">
+                  <Upload className={`w-6 h-6 ${
+                    isDark ? 'text-gray-400' : 'text-gray-500'
+                  }`} />
+                  <div>
+                    <label className="cursor-pointer">
+                      <span className="text-blue-600 hover:text-blue-700 font-medium">
+                        Dosya Yükle
+                      </span>
+                      <span className={`ml-2 text-sm ${
+                        isDark ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        veya sürükleyip bırakın
+                      </span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*,video/*"
+                        onChange={handleFileUpload}
+                      />
+                    </label>
+                  </div>
+                </div>
+                {uploadedFile && (
+                  <div className="mt-2 text-sm text-green-600">
+                    ✅ {uploadedFile.name} yüklendi
+                  </div>
+                )}
+              </div>
+            </div>
+            
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {availableCreatives.map((creative) => (
                 <div
@@ -286,6 +347,15 @@ const MetaAdsPublisher: React.FC = () => {
                       <div className="bg-purple-500 text-white text-xs px-2 py-1 rounded-full flex items-center space-x-1">
                         <Sparkles className="w-3 h-3" />
                         <span>AI</span>
+                      </div>
+                    </div>
+                  )}
+                  {/* User Uploaded Badge */}
+                  {creative.isUserUploaded && (
+                    <div className="absolute top-2 left-2">
+                      <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center space-x-1">
+                        <Upload className="w-3 h-3" />
+                        <span>Yüklendi</span>
                       </div>
                     </div>
                   )}
@@ -726,7 +796,7 @@ const MetaAdsPublisher: React.FC = () => {
           <h3 className={`text-lg font-semibold ${
             isDark ? 'text-white' : 'text-gray-900'
           }`}>
-            Aktif Kampanyalar ({campaigns.length})
+            Gerçek Kampanyalar ({campaigns.length})
           </h3>
           
           <div className="space-y-3">
@@ -817,7 +887,7 @@ const MetaAdsPublisher: React.FC = () => {
                   }`}>
                     Kreatif Önizleme
                   </h3>
-                  {viewingCreative.isAIGenerated && (
+                  {viewingCreative?.isAIGenerated && (
                     <div className="bg-purple-500 text-white text-xs px-2 py-1 rounded-full flex items-center space-x-1">
                       <Sparkles className="w-3 h-3" />
                       <span>AI Generated</span>
@@ -838,7 +908,7 @@ const MetaAdsPublisher: React.FC = () => {
               
               <div className="text-center">
                 <img 
-                  src={viewingCreative.url} 
+                  src={viewingCreative?.url} 
                   alt="Creative preview"
                   className="max-w-full h-auto rounded-lg shadow-lg mx-auto mb-4"
                   style={{ maxHeight: '70vh' }}
@@ -847,11 +917,11 @@ const MetaAdsPublisher: React.FC = () => {
                 <div className={`text-sm space-y-2 ${
                   isDark ? 'text-gray-300' : 'text-gray-600'
                 }`}>
-                  <p><strong>Prompt:</strong> {viewingCreative.prompt}</p>
-                  {viewingCreative.revisedPrompt && (
-                    <p><strong>DALL-E Revised:</strong> {viewingCreative.revisedPrompt}</p>
+                  <p><strong>Prompt:</strong> {viewingCreative?.prompt}</p>
+                  {viewingCreative?.revisedPrompt && (
+                    <p><strong>DALL-E Revised:</strong> {viewingCreative?.revisedPrompt}</p>
                   )}
-                  <p><strong>Tip:</strong> {viewingCreative.type === 'image' ? 'Görsel' : 'Video'}</p>
+                  <p><strong>Tip:</strong> {viewingCreative?.type === 'image' ? 'Görsel' : 'Video'}</p>
                 </div>
                 
                 <div className="flex justify-center space-x-3 mt-6">
@@ -865,8 +935,8 @@ const MetaAdsPublisher: React.FC = () => {
                   <button
                     onClick={() => {
                       const link = document.createElement('a');
-                      link.href = viewingCreative.url;
-                      link.download = `creative-${viewingCreative.id}.png`;
+                      link.href = viewingCreative?.url || '';
+                      link.download = `creative-${viewingCreative?.id}.png`;
                       link.target = '_blank';
                       link.click();
                     }}
