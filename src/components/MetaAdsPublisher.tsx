@@ -16,7 +16,10 @@ import {
   Image as ImageIcon,
   Play,
   Facebook,
-  Instagram
+  Instagram,
+  Upload,
+  X,
+  Download
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAssets } from '../contexts/AssetsContext';
