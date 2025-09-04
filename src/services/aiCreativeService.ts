@@ -132,16 +132,23 @@ export class AICreativeService {
       const response = await this.makeRequest(requestData);
 
       if (!response.ok) {
-        let errorDetails = response.statusText;
+        let errorDetails = `HTTP ${response.status}: ${response.statusText}`;
         try {
           const errorBody = await response.text();
-          console.error('AI Creative API Error Body:', errorBody);
-          errorDetails = errorBody || response.statusText;
+          
+          // Check if response is HTML (n8n error page)
+          if (errorBody.includes('<!DOCTYPE html>') || errorBody.includes('<html')) {
+            console.error('n8n workflow returned HTML error page:', errorBody);
+            errorDetails = `n8n workflow hatası - Lütfen n8n dashboard'unuzda workflow'u kontrol edin. HTTP ${response.status}`;
+          } else {
+            console.error('AI Creative API Error Body:', errorBody);
+            errorDetails = errorBody || response.statusText;
+          }
         } catch (e) {
           console.error('Could not read error response body:', e);
         }
         
-        throw new Error(`AI Creative API hatası (${response.status}): ${errorDetails}`);
+        throw new Error(errorDetails);
       }
 
       const result = await response.json();
@@ -204,16 +211,23 @@ export class AICreativeService {
       const response = await this.makeRequest(requestData);
 
       if (!response.ok) {
-        let errorDetails = response.statusText;
+        let errorDetails = `HTTP ${response.status}: ${response.statusText}`;
         try {
           const errorBody = await response.text();
-          console.error('AI Creative API Error Body:', errorBody);
-          errorDetails = errorBody || response.statusText;
+          
+          // Check if response is HTML (n8n error page)
+          if (errorBody.includes('<!DOCTYPE html>') || errorBody.includes('<html')) {
+            console.error('n8n workflow returned HTML error page:', errorBody);
+            errorDetails = `n8n workflow hatası - Lütfen n8n dashboard'unuzda workflow'u kontrol edin. HTTP ${response.status}`;
+          } else {
+            console.error('AI Creative API Error Body:', errorBody);
+            errorDetails = errorBody || response.statusText;
+          }
         } catch (e) {
           console.error('Could not read error response body:', e);
         }
         
-        throw new Error(`AI Creative API hatası (${response.status}): ${errorDetails}`);
+        throw new Error(errorDetails);
       }
 
       const result = await response.json();
