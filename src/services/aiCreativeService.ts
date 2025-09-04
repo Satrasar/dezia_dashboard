@@ -28,7 +28,7 @@ export interface AIGenerationResponse {
 }
 
 export class AICreativeService {
-  private baseUrl = '/api/ai-creative'; // Vite proxy kullan
+  private baseUrl = 'https://ozlemkumtas.app.n8n.cloud/webhook/ai-visual-studio'; // Production URL
   private maxRetries = 2;
   private retryDelay = 1000;
 
@@ -147,7 +147,29 @@ export class AICreativeService {
       const result = await response.json();
       console.log('AI Creative: Image-to-Image başarılı', result);
       
-      return result;
+      // n8n workflow response formatını kontrol et
+      if (result.success && result.url) {
+        return {
+          success: true,
+          url: result.url,
+          type: result.type || 'image',
+          message: result.message,
+          revisedPrompt: result.revisedPrompt,
+          originalPrompt: result.originalPrompt || prompt
+        };
+      } else if (result.imageUrl) {
+        // Alternatif response format
+        return {
+          success: true,
+          url: result.imageUrl,
+          type: result.outputType || 'image',
+          message: result.message || 'Görsel başarıyla oluşturuldu',
+          revisedPrompt: result.revisedPrompt
+        };
+      } else {
+        console.error('Unexpected response format:', result);
+        throw new Error('Response formatı beklenenden farklı: ' + JSON.stringify(result));
+      }
 
     } catch (error) {
       console.error('AI Creative Image-to-Image hatası:', error);
@@ -197,7 +219,29 @@ export class AICreativeService {
       const result = await response.json();
       console.log('AI Creative: Text-to-Image başarılı', result);
       
-      return result;
+      // n8n workflow response formatını kontrol et
+      if (result.success && result.url) {
+        return {
+          success: true,
+          url: result.url,
+          type: result.type || 'image',
+          message: result.message,
+          revisedPrompt: result.revisedPrompt,
+          originalPrompt: result.originalPrompt || prompt
+        };
+      } else if (result.imageUrl) {
+        // Alternatif response format
+        return {
+          success: true,
+          url: result.imageUrl,
+          type: result.outputType || 'image',
+          message: result.message || 'Görsel başarıyla oluşturuldu',
+          revisedPrompt: result.revisedPrompt
+        };
+      } else {
+        console.error('Unexpected response format:', result);
+        throw new Error('Response formatı beklenenden farklı: ' + JSON.stringify(result));
+      }
 
     } catch (error) {
       console.error('AI Creative Text-to-Image hatası:', error);

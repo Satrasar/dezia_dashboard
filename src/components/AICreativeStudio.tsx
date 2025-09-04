@@ -103,13 +103,10 @@ const AICreativeStudio: React.FC = () => {
           }
         }
 
-        if (result.data?.url) {
+        if (result.success && result.url) {
           const newAsset: GeneratedAsset = {
-            id: result.data.id,
-            type: result.data.type,
-            url: result.data.url,
             id: Date.now().toString(),
-            type: result.outputType || result.type || outputType,
+            type: result.type || outputType,
             url: result.url!,
             prompt: prompt,
             createdAt: new Date(),
@@ -125,12 +122,10 @@ const AICreativeStudio: React.FC = () => {
           // Show success message with details
           console.log('Generation successful:', {
             url: result.url,
-            originalPrompt: result.originalPrompt,
-            enhancedPrompt: result.enhancedPrompt,
             revisedPrompt: result.revisedPrompt
           });
         } else {
-          throw new Error('Oluşturulan içerik URL\'i alınamadı');
+          throw new Error('Oluşturulan içerik URL\'i alınamadı. Response: ' + JSON.stringify(result));
         }
       } else {
         throw new Error(result.error?.message || 'Oluşturulan içerik URL\'i alınamadı');
