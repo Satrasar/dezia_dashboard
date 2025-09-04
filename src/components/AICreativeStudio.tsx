@@ -30,6 +30,7 @@ const AICreativeStudio: React.FC = () => {
   const [outputType, setOutputType] = useState<'image' | 'video'>('image');
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastGeneratedResult, setLastGeneratedResult] = useState<any>(null);
+  const [viewingAsset, setViewingAsset] = useState<any>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -126,17 +127,32 @@ const AICreativeStudio: React.FC = () => {
   };
 
   const handleDownload = (asset: GeneratedAsset) => {
-    // Simulated download
+    console.log('İndiriliyor:', asset.url);
     const link = document.createElement('a');
     link.href = asset.url;
-    link.download = `generated-${asset.type}-${asset.id}.${asset.format.toLowerCase()}`;
+    link.download = `ai-generated-${asset.type}-${asset.id}.${asset.format.toLowerCase()}`;
+    link.target = '_blank';
     link.click();
   };
 
   const handleDelete = (id: string) => {
+    console.log('Siliniyor:', id);
     removeAsset(id);
   };
 
+  const handleView = (asset: GeneratedAsset) => {
+    console.log('Görüntüleniyor:', asset.url);
+    setViewingAsset(asset);
+  };
+
+  const handleCopy = (asset: GeneratedAsset) => {
+    console.log('URL kopyalanıyor:', asset.url);
+    navigator.clipboard.writeText(asset.url).then(() => {
+      alert('✅ Görsel URL\'i panoya kopyalandı!');
+    }).catch(() => {
+      alert('❌ Kopyalama başarısız');
+    });
+  };
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -471,19 +487,21 @@ const AICreativeStudio: React.FC = () => {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleDownload(asset)}
-                      className="p-1 text-blue-500 hover:bg-blue-500/20 rounded"
+                      className="p-1 text-blue-500 hover:bg-blue-500/20 rounded transition-colors"
                       title="İndir"
                     >
                       <Download className="w-4 h-4" />
                     </button>
                     <button
-                      className="p-1 text-gray-500 hover:bg-gray-500/20 rounded"
+                      onClick={() => handleView(asset)}
+                      className="p-1 text-gray-500 hover:bg-gray-500/20 rounded transition-colors"
                       title="Görüntüle"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
-                      className="p-1 text-gray-500 hover:bg-gray-500/20 rounded"
+                      onClick={() => handleCopy(asset)}
+                      className="p-1 text-gray-500 hover:bg-gray-500/20 rounded transition-colors"
                       title="Kopyala"
                     >
                       <Copy className="w-4 h-4" />
@@ -491,7 +509,7 @@ const AICreativeStudio: React.FC = () => {
                   </div>
                   <button
                     onClick={() => handleDelete(asset.id)}
-                    className="p-1 text-red-500 hover:bg-red-500/20 rounded"
+                    className="p-1 text-red-500 hover:bg-red-500/20 rounded transition-colors"
                     title="Sil"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -502,6 +520,96 @@ const AICreativeStudio: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Görsel Modal */}
+      {viewingAsset && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setViewingAsset(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="max-w-4xl max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={`${
+              isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            } border rounded-xl p-6`}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={`text-lg font-semibold ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Görsel Detayı
+                </h3>
+                <button
+                  onClick={() => setViewingAsset(null)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isDark 
+                      ? 'hover:bg-gray-700 text-gray-400' 
+                      : 'hover:bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="text-center">
+                <img 
+                  src={viewingAsset.url} 
+                  alt="Generated content"
+                  className="max-w-full h-auto rounded-lg shadow-lg mx-auto mb-4"
+                  style={{ maxHeight: '70vh' }}
+                />
+                
+                <div className={`text-sm space-y-2 ${
+                  isDark ? 'text-gray-300' : 'text-gray-600'
+                }`}>
+                  <p><strong>Orijinal Prompt:</strong> {viewingAsset.prompt}</p>
+                  {viewingAsset.revisedPrompt && (
+                    <p><strong>DALL-E Revised:</strong> {viewingAsset.revisedPrompt}</p>
+                  )}
+                  <p><strong>Boyut:</strong> {viewingAsset.dimensions} • <strong>Format:</strong> {viewingAsset.format}</p>
+                  <p><strong>Oluşturulma:</strong> {viewingAsset.createdAt.toLocaleString('tr-TR')}</p>
+                </div>
+                
+                <div className="flex justify-center space-x-3 mt-6">
+                  <button
+                    onClick={() => handleDownload(viewingAsset)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>İndir</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleCopy(viewingAsset)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span>URL Kopyala</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      handleDelete(viewingAsset.id);
+                      setViewingAsset(null);
+                    }}
+                    className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Sil</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </motion.div>
   );
 };

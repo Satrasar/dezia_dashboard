@@ -50,6 +50,7 @@ const MetaAdsPublisher: React.FC = () => {
   const { isDark } = useTheme();
   const { generatedAssets } = useAssets();
   const [selectedCreative, setSelectedCreative] = useState<any>(null);
+  const [viewingCreative, setViewingCreative] = useState<any>(null);
   const [adForm, setAdForm] = useState({
     campaignName: '',
     adTitle: '',
@@ -291,9 +292,30 @@ const MetaAdsPublisher: React.FC = () => {
                   {selectedCreative?.id === creative.id && (
                     <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
                       <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                        <Eye className="w-4 h-4 text-white" />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setViewingCreative(creative);
+                          }}
+                          className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                        >
+                          <Eye className="w-4 h-4 text-white" />
+                        </button>
                       </div>
                     </div>
+                  )}
+                  {/* Görüntüle butonu - seçili olmasa da */}
+                  {selectedCreative?.id !== creative.id && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewingCreative(creative);
+                      }}
+                      className="absolute top-2 left-2 p-1 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+                      title="Büyüt"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
                   )}
                   {/* Prompt Tooltip */}
                   <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-2">
@@ -768,6 +790,97 @@ const MetaAdsPublisher: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Kreatif Görüntüleme Modal */}
+      {viewingCreative && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setViewingCreative(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="max-w-4xl max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={`${
+              isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            } border rounded-xl p-6`}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <h3 className={`text-lg font-semibold ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Kreatif Önizleme
+                  </h3>
+                  {viewingCreative.isAIGenerated && (
+                    <div className="bg-purple-500 text-white text-xs px-2 py-1 rounded-full flex items-center space-x-1">
+                      <Sparkles className="w-3 h-3" />
+                      <span>AI Generated</span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setViewingCreative(null)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isDark 
+                      ? 'hover:bg-gray-700 text-gray-400' 
+                      : 'hover:bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="text-center">
+                <img 
+                  src={viewingCreative.url} 
+                  alt="Creative preview"
+                  className="max-w-full h-auto rounded-lg shadow-lg mx-auto mb-4"
+                  style={{ maxHeight: '70vh' }}
+                />
+                
+                <div className={`text-sm space-y-2 ${
+                  isDark ? 'text-gray-300' : 'text-gray-600'
+                }`}>
+                  <p><strong>Prompt:</strong> {viewingCreative.prompt}</p>
+                  {viewingCreative.revisedPrompt && (
+                    <p><strong>DALL-E Revised:</strong> {viewingCreative.revisedPrompt}</p>
+                  )}
+                  <p><strong>Tip:</strong> {viewingCreative.type === 'image' ? 'Görsel' : 'Video'}</p>
+                </div>
+                
+                <div className="flex justify-center space-x-3 mt-6">
+                  <button
+                    onClick={() => setSelectedCreative(viewingCreative)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    <span>Bu Kreatifi Seç</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = viewingCreative.url;
+                      link.download = `creative-${viewingCreative.id}.png`;
+                      link.target = '_blank';
+                      link.click();
+                    }}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>İndir</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </motion.div>
   );
 };
