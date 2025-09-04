@@ -18,7 +18,7 @@ export default defineConfig({
       '/api/ai-creative': {
         target: 'https://ozlemkumtas.app.n8n.cloud',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/ai-creative/, '/webhook/ai-creative-studio'),
+        rewrite: (path) => path.replace(/^\/api\/ai-creative/, '/webhook/ai-visual-studio'),
         secure: true,
         timeout: 60000,
         proxyTimeout: 60000,

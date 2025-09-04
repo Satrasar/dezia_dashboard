@@ -108,21 +108,21 @@ const AICreativeStudio: React.FC = () => {
             id: result.data.id,
             type: result.data.type,
             url: result.data.url,
-            prompt: result.data.prompt,
-            createdAt: new Date(result.data.created_at),
-            originalImage: activeTab === 'image-to-image' ? uploadedImage || undefined : undefined,
-            dimensions: result.data.dimensions,
-            format: result.data.format
+          id: Date.now().toString(),
+          type: result.type || outputType,
+          url: result.url,
+          prompt: prompt,
+          createdAt: new Date(),
           };
-          
-          setGeneratedAssets(prev => [newAsset, ...prev]);
+          dimensions: '1024x1024',
+          format: 'PNG'
           setPrompt('');
           setUploadedImage(null);
         } else {
           throw new Error('Oluşturulan içerik URL\'i alınamadı');
         }
       } else {
-        throw new Error(result.error?.message || 'AI generation başarısız');
+        throw new Error(result.error?.message || 'Oluşturulan içerik URL\'i alınamadı');
       }
 
     } catch (error) {

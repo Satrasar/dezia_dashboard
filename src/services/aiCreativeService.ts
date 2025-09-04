@@ -1,36 +1,23 @@
 export interface AIGenerationRequest {
-  action: 'generate' | 'get_history';
-  type: 'image-to-image' | 'prompt-to-media';
+  formMode: 'image-to-image' | 'text-to-image';
   prompt: string;
-  base_image?: string; // base64 encoded image for image-to-image
-  output_type: 'image' | 'video';
-  user_id?: string;
+  outputType: 'image' | 'video';
+  image?: File; // For image-to-image mode
+  submittedAt: string;
 }
 
 export interface AIGenerationResponse {
   success: boolean;
-  data?: {
-    id: string;
-    type: 'image' | 'video';
-    url: string;
-    prompt: string;
-    revised_prompt?: string;
-    created_at: string;
-    dimensions: string;
-    format: string;
-    processing_time: number;
-    ai_model: string;
-    user_id: string;
-    status?: string;
-    prediction_id?: string;
-    needs_polling?: boolean;
-  };
+  url?: string;
+  type?: 'image' | 'video';
+  outputType?: string;
+  message?: string;
+  revisedPrompt?: string;
   error?: {
     message: string;
     type: string;
     code: string;
   };
-  timestamp: string;
 }
 
 export class AICreativeService {
@@ -42,24 +29,20 @@ export class AICreativeService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  private async makeRequest(data: any, attempt: number = 1): Promise<Response> {
+  private async makeRequest(formData: FormData, attempt: number = 1): Promise<Response> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for AI generation
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
     console.log('AI Creative API Request:', {
       url: this.baseUrl,
-      data,
-      attempt
+      attempt,
+      formDataKeys: Array.from(formData.keys())
     });
 
     try {
       const response = await fetch(this.baseUrl, {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        body: formData,
         signal: controller.signal,
       });
 
@@ -78,26 +61,11 @@ export class AICreativeService {
       if (attempt < this.maxRetries) {
         console.log(`AI Creative API istek denemesi ${attempt} başarısız, ${this.retryDelay}ms sonra tekrar denenecek...`);
         await this.delay(this.retryDelay * attempt);
-        return this.makeRequest(data, attempt + 1);
+        return this.makeRequest(formData, attempt + 1);
       }
       
       throw error;
     }
-  }
-
-  // Convert file to base64
-  private async fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        // Remove data:image/...;base64, prefix
-        const base64 = result.split(',')[1];
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
   }
 
   // Generate image from image (image-to-image)
@@ -109,21 +77,16 @@ export class AICreativeService {
     try {
       console.log('AI Creative: Image-to-Image generation başlatılıyor...', prompt);
       
-      const base64Image = await this.fileToBase64(imageFile);
-      
-      const requestData: AIGenerationRequest = {
-        action: 'generate',
-        type: 'image-to-image',
-        prompt,
-        base_image: base64Image,
-        output_type: outputType,
-        user_id: 'dashboard_user'
-      };
+      const formData = new FormData();
+      formData.append('formMode', 'image-to-image');
+      formData.append('prompt', prompt);
+      formData.append('outputType', outputType);
+      formData.append('image', imageFile);
+      formData.append('submittedAt', new Date().toISOString());
 
-      const response = await this.makeRequest(requestData);
+      const response = await this.makeRequest(formData);
 
       if (!response.ok) {
-        // Try to get error details from response body
         let errorDetails = response.statusText;
         try {
           const errorBody = await response.text();
@@ -149,32 +112,28 @@ export class AICreativeService {
           message: error instanceof Error ? error.message : 'Bilinmeyen hata',
           type: 'generation_error',
           code: 'IMAGE_TO_IMAGE_FAILED'
-        },
-        timestamp: new Date().toISOString()
+        }
       };
     }
   }
 
-  // Generate media from prompt (prompt-to-media)
+  // Generate media from prompt (text-to-image)
   async generateFromPrompt(
     prompt: string, 
     outputType: 'image' | 'video' = 'image'
   ): Promise<AIGenerationResponse> {
     try {
-      console.log('AI Creative: Prompt-to-Media generation başlatılıyor...', prompt, outputType);
+      console.log('AI Creative: Text-to-Image generation başlatılıyor...', prompt, outputType);
       
-      const requestData: AIGenerationRequest = {
-        action: 'generate',
-        type: 'prompt-to-media',
-        prompt,
-        output_type: outputType,
-        user_id: 'dashboard_user'
-      };
+      const formData = new FormData();
+      formData.append('formMode', 'text-to-image');
+      formData.append('prompt', prompt);
+      formData.append('outputType', outputType);
+      formData.append('submittedAt', new Date().toISOString());
 
-      const response = await this.makeRequest(requestData);
+      const response = await this.makeRequest(formData);
 
       if (!response.ok) {
-        // Try to get error details from response body
         let errorDetails = response.statusText;
         try {
           const errorBody = await response.text();
@@ -188,115 +147,28 @@ export class AICreativeService {
       }
 
       const result = await response.json();
-      console.log('AI Creative: Prompt-to-Media başarılı', result);
+      console.log('AI Creative: Text-to-Image başarılı', result);
       
       return result;
 
     } catch (error) {
-      console.error('AI Creative Prompt-to-Media hatası:', error);
+      console.error('AI Creative Text-to-Image hatası:', error);
       return {
         success: false,
         error: {
           message: error instanceof Error ? error.message : 'Bilinmeyen hata',
           type: 'generation_error',
-          code: 'PROMPT_TO_MEDIA_FAILED'
-        },
-        timestamp: new Date().toISOString()
+          code: 'TEXT_TO_IMAGE_FAILED'
+        }
       };
     }
   }
 
-  // Get generation history
+  // Get generation history (placeholder - n8n workflow'unuzda history endpoint'i yok)
   async getHistory(): Promise<AIGenerationResponse> {
-    try {
-      const response = await fetch(this.baseUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`History API hatası (${response.status}): ${response.statusText}`);
-      }
-
-      return await response.json();
-
-    } catch (error) {
-      console.error('AI Creative History hatası:', error);
-      return {
-        success: false,
-        error: {
-          message: error instanceof Error ? error.message : 'Bilinmeyen hata',
-          type: 'history_error',
-          code: 'HISTORY_FETCH_FAILED'
-        },
-        timestamp: new Date().toISOString()
-      };
-    }
-  }
-
-  // Poll for completion (for async operations like Replicate)
-  async pollForCompletion(predictionId: string, maxAttempts: number = 30): Promise<AIGenerationResponse> {
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      try {
-        const response = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
-          headers: {
-            'Authorization': `Token ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
-            'Content-Type': 'application/json',
-          }
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          
-          if (result.status === 'succeeded' && result.output) {
-            return {
-              success: true,
-              data: {
-                id: predictionId,
-                type: 'image',
-                url: Array.isArray(result.output) ? result.output[0] : result.output,
-                prompt: result.input?.prompt || '',
-                created_at: new Date().toISOString(),
-                dimensions: '1024x1024',
-                format: 'PNG',
-                processing_time: 0,
-                ai_model: 'stable-diffusion',
-                user_id: 'dashboard_user',
-                status: 'completed'
-              },
-              timestamp: new Date().toISOString()
-            };
-          } else if (result.status === 'failed') {
-            return {
-              success: false,
-              error: {
-                message: result.error || 'Generation failed',
-                type: 'generation_error',
-                code: 'GENERATION_FAILED'
-              },
-              timestamp: new Date().toISOString()
-            };
-          }
-        }
-
-        // Wait 2 seconds before next poll
-        await this.delay(2000);
-      } catch (error) {
-        console.error(`Polling attempt ${attempt + 1} failed:`, error);
-      }
-    }
-
     return {
-      success: false,
-      error: {
-        message: 'Generation timeout - please try again',
-        type: 'timeout_error',
-        code: 'GENERATION_TIMEOUT'
-      },
-      timestamp: new Date().toISOString()
+      success: true,
+      message: 'History feature coming soon'
     };
   }
 }
