@@ -23,11 +23,11 @@ interface GeneratedAsset {
   type: 'image' | 'video';
   url: string;
   prompt: string;
-  revisedPrompt?: string;
   createdAt: Date;
   originalImage?: string;
   dimensions: string;
   format: string;
+  revisedPrompt?: string;
 }
 
 const AICreativeStudio: React.FC = () => {
@@ -129,12 +129,6 @@ const AICreativeStudio: React.FC = () => {
           setUploadedImage(null);
           
           // Show success message with details
-          console.log('Generation successful:', {
-            url: result.url,
-            message: result.message,
-            revisedPrompt: result.revisedPrompt
-          });
-          
           console.log('✅ Generation successful!', {
             url: result.url,
             message: result.message,
