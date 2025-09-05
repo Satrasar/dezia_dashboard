@@ -34,21 +34,10 @@ export const AssetsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const assetsWithDates = parsed.map((asset: any) => ({
           ...asset,
           createdAt: new Date(asset.createdAt),
-          // DALL-E URL'lerini fallback ile değiştir ve localStorage'ı güncelle
-          url: asset.url && asset.url.includes('oaidalleapiprodscus.blob.core.windows.net') 
-            ? 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024'
-            : asset.url
+          // URL'i olduğu gibi bırak, hata durumunda component seviyesinde fallback kullanılacak
+          url: asset.url
         }));
         setGeneratedAssets(assetsWithDates);
-        
-        // Eğer DALL-E URL'leri değiştirildiyse localStorage'ı güncelle
-        const hasDALLEUrls = parsed.some((asset: any) => 
-          asset.url && asset.url.includes('oaidalleapiprodscus.blob.core.windows.net')
-        );
-        if (hasDALLEUrls) {
-          localStorage.setItem('dezia-generated-assets', JSON.stringify(assetsWithDates));
-          console.log('DALL-E URL\'leri fallback ile değiştirildi ve localStorage güncellendi');
-        }
         
         console.log('LocalStorage\'dan yüklenen asset sayısı:', assetsWithDates.length);
       } catch (error) {

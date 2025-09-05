@@ -337,8 +337,11 @@ const MetaAdsPublisher: React.FC = () => {
                     alt="Creative"
                    className="w-full h-32 object-cover"
                    onError={(e) => {
-                     console.error('Kreatif görsel yükleme hatası:', creative.url);
-                     e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
+                    console.error('Kreatif görsel yükleme hatası (DALL-E URL expired):', creative.url);
+                    // Sadece DALL-E URL'leri için fallback kullan
+                    if (creative.url.includes('oaidalleapiprodscus.blob.core.windows.net')) {
+                      e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
+                    }
                    }}
                   />
                   <div className="absolute top-2 right-2">
@@ -920,7 +923,10 @@ const MetaAdsPublisher: React.FC = () => {
                  className="max-w-full h-auto rounded-lg shadow-lg mx-auto mb-4"
                  onError={(e) => {
                    console.error('Modal kreatif yükleme hatası (DALL-E URL expired):', viewingCreative?.url);
-                   e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
+                   // Sadece DALL-E URL'leri için fallback kullan
+                   if (viewingCreative?.url && viewingCreative.url.includes('oaidalleapiprodscus.blob.core.windows.net')) {
+                     e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
+                   }
                  }}
                   style={{ maxHeight: '70vh' }}
                 />

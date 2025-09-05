@@ -162,13 +162,13 @@ export class AICreativeService {
         // DALL-E URL'leri için özel kontrol
         if (finalUrl.includes('oaidalleapiprodscus.blob.core.windows.net')) {
           console.log('DALL-E URL tespit edildi, fallback kullanılacak');
-          const fallbackUrl = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
+          // DALL-E URL'ini kullan ama hata durumunda fallback'e geçecek
           return {
             success: true,
-            url: fallbackUrl,
+            url: finalUrl, // Orijinal DALL-E URL'ini kullan
             type: result.type || 'image',
             outputType: result.outputType || outputType,
-            message: 'Görsel oluşturuldu (DALL-E URL geçici olduğu için fallback kullanıldı)',
+            message: 'Görsel başarıyla oluşturuldu',
             revisedPrompt: result.revisedPrompt,
             originalPrompt: prompt
           };
@@ -249,13 +249,13 @@ export class AICreativeService {
         // DALL-E URL'leri için özel kontrol
         if (finalUrl.includes('oaidalleapiprodscus.blob.core.windows.net')) {
           console.log('DALL-E URL tespit edildi, fallback kullanılacak');
-          const fallbackUrl = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
+          // DALL-E URL'ini kullan ama hata durumunda fallback'e geçecek
           return {
             success: true,
-            url: fallbackUrl,
+            url: finalUrl, // Orijinal DALL-E URL'ini kullan
             type: result.type || 'image',
             outputType: result.outputType || outputType,
-            message: 'Görsel oluşturuldu (DALL-E URL geçici olduğu için fallback kullanıldı)',
+            message: 'Görsel başarıyla oluşturuldu',
             revisedPrompt: result.revisedPrompt,
             originalPrompt: prompt
           };
