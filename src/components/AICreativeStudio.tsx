@@ -27,6 +27,7 @@ const AICreativeStudio: React.FC = () => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [imagePrompt, setImagePrompt] = useState('');
   const [textPrompt, setTextPrompt] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   const [outputType, setOutputType] = useState<'image' | 'video'>('image');
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastGeneratedResult, setLastGeneratedResult] = useState<any>(null);
@@ -35,11 +36,43 @@ const AICreativeStudio: React.FC = () => {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setUploadedImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      processFile(file);
+    }
+  };
+
+  const processFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setUploadedImage(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+        processFile(file);
+      } else {
+        alert('Lütfen sadece görsel veya video dosyası yükleyin');
+      }
     }
   };
 
@@ -252,7 +285,17 @@ const AICreativeStudio: React.FC = () => {
                   isDark 
                     ? 'border-gray-600 bg-gray-700/30' 
                     : 'border-gray-300 bg-gray-50'
-                }`}>
+                } ${
+                  isDragging 
+                    ? isDark 
+                      ? 'border-blue-500 bg-blue-500/10' 
+                      : 'border-blue-400 bg-blue-50'
+                    : ''
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                   {uploadedImage ? (
                     <div className="relative">
                       <img 
