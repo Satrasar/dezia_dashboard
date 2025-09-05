@@ -56,6 +56,7 @@ const MetaAdsPublisher: React.FC = () => {
   const [viewingCreative, setViewingCreative] = useState<any>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadedFilePreview, setUploadedFilePreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [adForm, setAdForm] = useState({
     campaignName: '',
     adTitle: '',
@@ -159,12 +160,45 @@ const MetaAdsPublisher: React.FC = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setUploadedFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setUploadedFilePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      processFile(file);
+    }
+  };
+
+  const processFile = (file: File) => {
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      alert('Lütfen sadece görsel veya video dosyası yükleyin');
+      return;
+    }
+
+    setUploadedFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setUploadedFilePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      processFile(file);
     }
   };
 
@@ -283,11 +317,25 @@ const MetaAdsPublisher: React.FC = () => {
             
             {/* File Upload Section */}
             <div className="mb-6">
-              <div className={`border-2 border-dashed rounded-lg p-4 text-center ${
+              <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-all duration-300 ${
                 isDark 
                   ? 'border-gray-600 bg-gray-700/30' 
                   : 'border-gray-300 bg-gray-50'
-              }`}>
+              } ${
+                isDragging 
+                  ? isDark 
+                    ? 'border-blue-500 bg-blue-500/20 shadow-lg scale-105' 
+                    : 'border-blue-400 bg-blue-100 shadow-lg scale-105'
+                  : ''
+              } hover:${
+                isDark 
+                  ? 'border-gray-500 bg-gray-700/50' 
+                  : 'border-gray-400 bg-gray-100'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
                 <div className="flex items-center justify-center space-x-4">
                   <Upload className={`w-6 h-6 ${
                     isDark ? 'text-gray-400' : 'text-gray-500'

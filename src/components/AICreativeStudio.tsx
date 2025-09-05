@@ -281,16 +281,20 @@ const AICreativeStudio: React.FC = () => {
                 }`}>
                   Orijinal Görsel
                 </label>
-                <div className={`border-2 border-dashed rounded-lg p-6 text-center ${
+                <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-all duration-300 ${
                   isDark 
                     ? 'border-gray-600 bg-gray-700/30' 
                     : 'border-gray-300 bg-gray-50'
                 } ${
                   isDragging 
                     ? isDark 
-                      ? 'border-blue-500 bg-blue-500/10' 
-                      : 'border-blue-400 bg-blue-50'
+                      ? 'border-blue-500 bg-blue-500/20 shadow-lg scale-105' 
+                      : 'border-blue-400 bg-blue-100 shadow-lg scale-105'
                     : ''
+                } hover:${
+                  isDark 
+                    ? 'border-gray-500 bg-gray-700/50' 
+                    : 'border-gray-400 bg-gray-100'
                 }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
