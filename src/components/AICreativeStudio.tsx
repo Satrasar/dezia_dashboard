@@ -285,10 +285,7 @@ const AICreativeStudio: React.FC = () => {
                   if (activeTab === 'image-to-image') {
                     setImagePrompt(e.target.value);
                   } else {
-                  console.error('Modal görsel yükleme hatası (DALL-E URL expired):', viewingAsset?.url);
-                  // Sadece DALL-E URL'leri için fallback kullan
-                  if (viewingAsset?.url && viewingAsset.url.includes('oaidalleapiprodscus.blob.core.windows.net')) {
-                    e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
+                    setTextPrompt(e.target.value);
                   }
                 }}
                 placeholder={
@@ -575,12 +572,9 @@ const AICreativeStudio: React.FC = () => {
                   alt="Generated content"
                   className="max-w-full h-auto rounded-lg shadow-lg mx-auto mb-4"
                   onError={(e) => {
-                    console.error('Sonuç görseli yükleme hatası (DALL-E URL expired):', lastGeneratedResult.url);
+                    console.error('Modal görsel yükleme hatası (DALL-E URL expired):', viewingAsset?.url);
                     // Sadece DALL-E URL'leri için fallback kullan
-                    if (lastGeneratedResult.url.includes('oaidalleapiprodscus.blob.core.windows.net')) {
-                      e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
-                    }
-                    if (asset.url.includes('oaidalleapiprodscus.blob.core.windows.net')) {
+                    if (viewingAsset?.url && viewingAsset.url.includes('oaidalleapiprodscus.blob.core.windows.net')) {
                       e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
                     }
                   }}
