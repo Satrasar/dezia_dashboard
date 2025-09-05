@@ -382,6 +382,10 @@ const AICreativeStudio: React.FC = () => {
                     src={lastGeneratedResult.url} 
                     alt="Generated content"
                     className="max-w-full h-auto rounded-lg shadow-lg mx-auto mb-4"
+                    onError={(e) => {
+                      console.error('Sonuç görseli yükleme hatası:', lastGeneratedResult.url);
+                      e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400';
+                    }}
                     style={{ maxHeight: '400px' }}
                   />
                   
@@ -449,6 +453,10 @@ const AICreativeStudio: React.FC = () => {
                     src={asset.url} 
                     alt="Generated content"
                     className="w-16 h-16 object-cover rounded-lg"
+                    onError={(e) => {
+                      console.error('Görsel yükleme hatası:', asset.url);
+                      e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400';
+                    }}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
@@ -563,6 +571,10 @@ const AICreativeStudio: React.FC = () => {
                   src={viewingAsset.url} 
                   alt="Generated content"
                   className="max-w-full h-auto rounded-lg shadow-lg mx-auto mb-4"
+                  onError={(e) => {
+                    console.error('Modal görsel yükleme hatası:', viewingAsset?.url);
+                    e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400';
+                  }}
                   style={{ maxHeight: '70vh' }}
                 />
                 

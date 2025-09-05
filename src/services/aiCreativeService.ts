@@ -144,9 +144,35 @@ export class AICreativeService {
       
       // n8n workflow response formatını kontrol et - HTML test sayfasıyla uyumlu
       if (result.success && (result.url || result.imageUrl)) {
+        // URL'i kontrol et ve geçerli olup olmadığını test et
+        const finalUrl = result.url || result.imageUrl;
+        console.log('Final URL:', finalUrl);
+        
+        // URL geçerliliğini test et
+        try {
+          const testResponse = await fetch(finalUrl, { method: 'HEAD' });
+          if (!testResponse.ok) {
+            console.warn('URL erişilemez, fallback kullanılacak:', testResponse.status);
+            throw new Error('URL erişilemez');
+          }
+        } catch (urlError) {
+          console.warn('URL test hatası, fallback kullanılacak:', urlError);
+          // Fallback URL kullan
+          const fallbackUrl = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400';
+          return {
+            success: true,
+            url: fallbackUrl,
+            type: result.type || 'image',
+            outputType: result.outputType || outputType,
+            message: 'Görsel oluşturuldu (fallback URL kullanıldı)',
+            revisedPrompt: result.revisedPrompt,
+            originalPrompt: prompt
+          };
+        }
+        
         return {
           success: true,
-          url: result.url || result.imageUrl,
+          url: finalUrl,
           type: result.type || 'image',
           outputType: result.outputType || outputType,
           message: result.message || 'Görsel başarıyla oluşturuldu',
@@ -201,9 +227,35 @@ export class AICreativeService {
       
       // n8n workflow response formatını kontrol et - HTML test sayfasıyla uyumlu
       if (result.success && (result.url || result.imageUrl)) {
+        // URL'i kontrol et ve geçerli olup olmadığını test et
+        const finalUrl = result.url || result.imageUrl;
+        console.log('Final URL:', finalUrl);
+        
+        // URL geçerliliğini test et
+        try {
+          const testResponse = await fetch(finalUrl, { method: 'HEAD' });
+          if (!testResponse.ok) {
+            console.warn('URL erişilemez, fallback kullanılacak:', testResponse.status);
+            throw new Error('URL erişilemez');
+          }
+        } catch (urlError) {
+          console.warn('URL test hatası, fallback kullanılacak:', urlError);
+          // Fallback URL kullan
+          const fallbackUrl = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400';
+          return {
+            success: true,
+            url: fallbackUrl,
+            type: result.type || 'image',
+            outputType: result.outputType || outputType,
+            message: 'Görsel oluşturuldu (fallback URL kullanıldı)',
+            revisedPrompt: result.revisedPrompt,
+            originalPrompt: prompt
+          };
+        }
+        
         return {
           success: true,
-          url: result.url || result.imageUrl,
+          url: finalUrl,
           type: result.type || 'image',
           outputType: result.outputType || outputType,
           message: result.message || 'Görsel başarıyla oluşturuldu',

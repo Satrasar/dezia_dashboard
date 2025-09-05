@@ -335,7 +335,11 @@ const MetaAdsPublisher: React.FC = () => {
                   <img 
                     src={creative.url} 
                     alt="Creative"
-                    className="w-full h-32 object-cover"
+                   className="w-full h-32 object-cover"
+                   onError={(e) => {
+                     console.error('Kreatif görsel yükleme hatası:', creative.url);
+                     e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400';
+                   }}
                   />
                   <div className="absolute top-2 right-2">
                     {creative.type === 'image' ? (
@@ -913,7 +917,11 @@ const MetaAdsPublisher: React.FC = () => {
                 <img 
                   src={viewingCreative?.url} 
                   alt="Creative preview"
-                  className="max-w-full h-auto rounded-lg shadow-lg mx-auto mb-4"
+                 className="max-w-full h-auto rounded-lg shadow-lg mx-auto mb-4"
+                 onError={(e) => {
+                   console.error('Modal kreatif yükleme hatası:', viewingCreative?.url);
+                   e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400';
+                 }}
                   style={{ maxHeight: '70vh' }}
                 />
                 
