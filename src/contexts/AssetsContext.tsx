@@ -36,7 +36,7 @@ export const AssetsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           createdAt: new Date(asset.createdAt),
           // DALL-E URL'lerini fallback ile değiştir
           url: asset.url && asset.url.includes('oaidalleapiprodscus.blob.core.windows.net') 
-            ? `https://images.pexels.com/photos/${Math.floor(Math.random() * 1000000) + 1000000}/pexels-photo-${Math.floor(Math.random() * 1000000) + 1000000}.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024`
+            ? 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024'
             : asset.url
         }));
         setGeneratedAssets(assetsWithDates);
