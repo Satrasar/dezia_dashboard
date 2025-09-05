@@ -34,10 +34,11 @@ export const AssetsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const assetsWithDates = parsed.map((asset: any) => ({
           ...asset,
           createdAt: new Date(asset.createdAt),
-          // URL'i olduğu gibi bırak, hata durumunda component seviyesinde fallback kullanılacak
+          // URL'i olduğu gibi bırak - artık base64 olarak saklanıyor
           url: asset.url
-        }));
-        setGeneratedAssets(assetsWithDates);
+        }
+        )
+        )
         
         console.log('LocalStorage\'dan yüklenen asset sayısı:', assetsWithDates.length);
       } catch (error) {
