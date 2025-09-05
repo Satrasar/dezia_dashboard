@@ -338,7 +338,7 @@ const MetaAdsPublisher: React.FC = () => {
                    className="w-full h-32 object-cover"
                    onError={(e) => {
                      console.error('Kreatif görsel yükleme hatası:', creative.url);
-                     e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=400';
+                     e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
                    }}
                   />
                   <div className="absolute top-2 right-2">
@@ -920,8 +920,7 @@ const MetaAdsPublisher: React.FC = () => {
                  className="max-w-full h-auto rounded-lg shadow-lg mx-auto mb-4"
                  onError={(e) => {
                    console.error('Modal kreatif yükleme hatası (DALL-E URL expired):', viewingCreative?.url);
-                   const fallbackUrl = `https://images.pexels.com/photos/${Math.floor(Math.random() * 1000000) + 1000000}/pexels-photo-${Math.floor(Math.random() * 1000000) + 1000000}.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024`;
-                   e.currentTarget.src = fallbackUrl;
+                   e.currentTarget.src = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
                  }}
                   style={{ maxHeight: '70vh' }}
                 />

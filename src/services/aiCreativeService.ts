@@ -162,7 +162,7 @@ export class AICreativeService {
         // DALL-E URL'leri için özel kontrol
         if (finalUrl.includes('oaidalleapiprodscus.blob.core.windows.net')) {
           console.log('DALL-E URL tespit edildi, fallback kullanılacak');
-          const fallbackUrl = `https://images.pexels.com/photos/${Math.floor(Math.random() * 1000000) + 1000000}/pexels-photo-${Math.floor(Math.random() * 1000000) + 1000000}.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024`;
+          const fallbackUrl = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
           return {
             success: true,
             url: fallbackUrl,
@@ -249,7 +249,7 @@ export class AICreativeService {
         // DALL-E URL'leri için özel kontrol
         if (finalUrl.includes('oaidalleapiprodscus.blob.core.windows.net')) {
           console.log('DALL-E URL tespit edildi, fallback kullanılacak');
-          const fallbackUrl = `https://images.pexels.com/photos/${Math.floor(Math.random() * 1000000) + 1000000}/pexels-photo-${Math.floor(Math.random() * 1000000) + 1000000}.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024`;
+          const fallbackUrl = 'https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?auto=compress&cs=tinysrgb&w=1024&h=1024';
           return {
             success: true,
             url: fallbackUrl,
