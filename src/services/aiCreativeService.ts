@@ -33,6 +33,36 @@ export class AICreativeService {
   private maxRetries = 2;
   private retryDelay = 1000;
 
+  // DALL-E URL'ini base64'e çevir
+  private async convertUrlToBase64(url: string): Promise<string | null> {
+    try {
+      console.log('DALL-E URL base64\'e çevriliyor:', url);
+      
+      const response = await fetch(url, {
+        mode: 'cors',
+        headers: {
+          'Accept': 'image/*'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      
+    } catch (error) {
+      console.error('URL to base64 conversion failed:', error);
+      return null;
+    }
+  }
   private async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -161,17 +191,25 @@ export class AICreativeService {
         
         // DALL-E URL'leri için özel kontrol
         if (finalUrl.includes('oaidalleapiprodscus.blob.core.windows.net')) {
-          console.log('DALL-E URL tespit edildi, fallback kullanılacak');
-          // DALL-E URL'ini kullan ama hata durumunda fallback'e geçecek
-          return {
-            success: true,
-            url: finalUrl, // Orijinal DALL-E URL'ini kullan
-            type: result.type || 'image',
-            outputType: result.outputType || outputType,
-            message: 'Görsel başarıyla oluşturuldu',
-            revisedPrompt: result.revisedPrompt,
-            originalPrompt: prompt
-          };
+          console.log('DALL-E URL tespit edildi, base64\'e çevriliyor...');
+          
+          // DALL-E URL'ini base64'e çevir
+          const base64Url = await this.convertUrlToBase64(finalUrl);
+          
+          if (base64Url) {
+            console.log('✅ DALL-E görseli base64\'e çevrildi, kalıcı olarak saklanacak');
+            return {
+              success: true,
+              url: base64Url, // Base64 URL kullan
+              type: result.type || 'image',
+              outputType: result.outputType || outputType,
+              message: 'Görsel başarıyla oluşturuldu ve kalıcı olarak saklandı',
+              revisedPrompt: result.revisedPrompt,
+              originalPrompt: prompt
+            };
+          } else {
+            console.warn('⚠️ Base64 çevirme başarısız, orijinal URL kullanılacak');
+          }
         }
         
         return {
