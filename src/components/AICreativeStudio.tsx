@@ -119,8 +119,27 @@ const AICreativeStudio: React.FC = () => {
     } catch (error) {
       console.error('AI Creative generation hatası:', error);
       
-      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
-      alert('❌ Bir hata oluştu: ' + errorMessage);
+      let errorMessage = 'Bilinmeyen hata';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      console.log('Detaylı hata bilgisi:', {
+        error,
+        message: errorMessage,
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
+      
+      // Kullanıcıya daha açıklayıcı hata mesajı göster
+      if (errorMessage.includes('JSON')) {
+        alert('❌ Sunucudan geçersiz yanıt alındı. n8n workflow\'unun doğru çalıştığından emin olun.');
+      } else if (errorMessage.includes('HTTP 500')) {
+        alert('❌ Sunucu hatası. n8n workflow\'unda bir sorun var.');
+      } else if (errorMessage.includes('HTTP 404')) {
+        alert('❌ AI Creative endpoint bulunamadı. n8n workflow URL\'ini kontrol edin.');
+      } else {
+        alert('❌ Bir hata oluştu: ' + errorMessage);
+      }
     } finally {
       setIsGenerating(false);
     }

@@ -164,12 +164,31 @@ export class AICreativeService {
       const response = await this.makeRequest(requestData);
 
       if (!response.ok) {
-        const errorText = await response.text();
+        let errorText;
+        try {
+          errorText = await response.text();
+        } catch (textError) {
+          errorText = `HTTP ${response.status} - Could not read response`;
+        }
         console.error('AI Creative API Error:', errorText);
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        const responseText = await response.text();
+        console.log('AI Creative raw response:', responseText);
+        
+        if (!responseText || responseText.trim() === '') {
+          throw new Error('Empty response from server');
+        }
+        
+        result = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error('JSON parsing error:', jsonError);
+        throw new Error('Invalid JSON response from server: ' + (jsonError instanceof Error ? jsonError.message : 'Unknown error'));
+      }
+      
       console.log('AI Creative: Image-to-Image başarılı', result);
       
       // n8n workflow response formatını kontrol et - HTML test sayfasıyla uyumlu
@@ -259,12 +278,31 @@ export class AICreativeService {
       const response = await this.makeRequest(requestData);
 
       if (!response.ok) {
-        const errorText = await response.text();
+        let errorText;
+        try {
+          errorText = await response.text();
+        } catch (textError) {
+          errorText = `HTTP ${response.status} - Could not read response`;
+        }
         console.error('AI Creative API Error:', errorText);
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        const responseText = await response.text();
+        console.log('AI Creative raw response:', responseText);
+        
+        if (!responseText || responseText.trim() === '') {
+          throw new Error('Empty response from server');
+        }
+        
+        result = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error('JSON parsing error:', jsonError);
+        throw new Error('Invalid JSON response from server: ' + (jsonError instanceof Error ? jsonError.message : 'Unknown error'));
+      }
+      
       console.log('AI Creative: Text-to-Image başarılı', result);
       
       // n8n workflow response formatını kontrol et - HTML test sayfasıyla uyumlu
