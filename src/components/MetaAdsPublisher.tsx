@@ -228,57 +228,6 @@ const MetaAdsPublisher: React.FC = () => {
       return;
     }
 
-    try {
-      // Meta Ads API'sine gönder
-      const response = await fetch('/api/meta-ads', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          campaignName: adForm.campaignName,
-          adTitle: adForm.adTitle,
-          adDescription: adForm.adDescription,
-          callToAction: adForm.callToAction,
-          creative: {
-            type: selectedCreative.type,
-            url: selectedCreative.url
-          },
-          targeting: {
-            type: adForm.targetingType,
-            ageMin: adForm.customAudience.ageMin,
-            ageMax: adForm.customAudience.ageMax,
-            location: adForm.customAudience.location,
-            interests: adForm.customAudience.interests
-          },
-          budget: {
-            daily: adForm.budget.amount,
-            duration: adForm.budget.duration
-          },
-          platforms: adForm.platforms,
-          hashtags: adForm.hashtags,
-          submittedAt: new Date().toISOString()
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log('Meta Ads API response:', result);
-
-      if (result.success) {
-        alert('✅ Reklam başarıyla Meta Ads\'e gönderildi!');
-      } else {
-        throw new Error(result.error?.message || 'Bilinmeyen hata');
-      }
-    } catch (error) {
-      console.error('Meta Ads API hatası:', error);
-      alert('❌ Reklam gönderilirken hata oluştu: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'));
-      return;
-    }
-
     const newCampaign: AdCampaign = {
       id: Date.now().toString(),
       name: adForm.campaignName,
