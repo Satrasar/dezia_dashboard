@@ -8,12 +8,23 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api/n8n': {
-        target: 'http://localhost:5678',
+        target: 'http://localhost:5678/webhook/56c93b71-b493-432c-a7c0-4dea2bd97771',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/n8n/, '/webhook/56c93b71-b493-432c-a7c0-4dea2bd97771'),
+        rewrite: (path) => path.replace(/^\/api\/n8n/, ''),
         secure: false,
         timeout: 30000,
         proxyTimeout: 30000,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('n8n proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Sending Request to n8n:', req.method, req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req, _res) => {
+            console.log('Received Response from n8n:', proxyRes.statusCode, req.url);
+          });
+        }
       },
       '/api/n8n/automation': {
         target: 'http://localhost:5678',
@@ -41,7 +52,7 @@ export default defineConfig({
             console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
           });
         }
-      }
+      },
       '/api/meta-ads': {
         target: 'http://localhost:5678/webhook/create-facebook-ad',
         changeOrigin: true,
