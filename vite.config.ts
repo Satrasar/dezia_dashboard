@@ -8,26 +8,45 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api/n8n': {
-        target: 'https://ozlemkumtas.app.n8n.cloud',
+        target: 'http://localhost:5678',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/n8n/, '/webhook/56c93b71-b493-432c-a7c0-4dea2bd97771'),
-        secure: true,
+        secure: false,
         timeout: 30000,
         proxyTimeout: 30000,
       },
       '/api/n8n/automation': {
-        target: 'https://ozlemkumtas.app.n8n.cloud',
+        target: 'http://localhost:5678',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/n8n\/automation/, '/webhook/automation-control'),
-        secure: true,
+        secure: false,
         timeout: 30000,
         proxyTimeout: 30000,
       },
       '/api/ai-creative': {
-        target: 'https://ozlemkumtas.app.n8n.cloud/webhook/ai-visual-studio',
+        target: 'http://localhost:5678/webhook/ai-visual-studio',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/ai-creative/, ''),
-        secure: true,
+        secure: false,
+        timeout: 60000,
+        proxyTimeout: 60000,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Sending Request to the Target:', req.method, req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req, _res) => {
+            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+          });
+        }
+      }
+      '/api/meta-ads': {
+        target: 'http://localhost:5678/webhook/create-facebook-ad',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/meta-ads/, ''),
+        secure: false,
         timeout: 60000,
         proxyTimeout: 60000,
         configure: (proxy, _options) => {

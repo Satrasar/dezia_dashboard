@@ -1,6 +1,6 @@
 // n8n API servisi
 export class N8nService {
-  private baseUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://ozlemkumtas.app.n8n.cloud';
+  private baseUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'http://localhost:5678';
   private webhookPath = '/webhook/56c93b71-b493-432c-a7c0-4dea2bd97771';
   private maxRetries = 2;
   private retryDelay = 1000;
