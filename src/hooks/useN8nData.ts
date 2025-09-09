@@ -61,10 +61,25 @@ export const useN8nData = () => {
       setError(null);
       
       console.log('n8n verisi çekiliyor...');
+      
+      // Önce n8n sunucusunun çalışıp çalışmadığını kontrol et
+      try {
+        const healthCheck = await fetch('/api/n8n', { 
+          method: 'GET',
+          signal: AbortSignal.timeout(5000) // 5 saniye timeout
+        });
+        console.log('n8n health check:', healthCheck.status);
+      } catch (healthError) {
+        console.error('n8n sunucusu erişilemez:', healthError);
+        throw new Error('n8n sunucusuna bağlanılamıyor. localhost:5678 çalışıyor mu?');
+      }
+      
       const response = await n8nService.getCampaignData();
       
       if (!response.success) {
-        throw new Error('n8n Workflow Hatası: ' + (response.error || 'Bilinmeyen hata'));
+        const errorMsg = response.error || 'Bilinmeyen hata';
+        console.error('n8n workflow hatası:', errorMsg);
+        throw new Error('n8n Workflow Hatası: ' + errorMsg);
       }
 
       console.log('n8n yanıtı alındı:', response);
