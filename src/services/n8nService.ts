@@ -1,7 +1,7 @@
 // n8n API servisi
 export class N8nService {
-  private baseUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://ozlemkumtas.app.n8n.cloud';
-  private webhookPath = '/webhook/56c93b71-b493-432c-a7c0-4dea2bd97771';
+  private baseUrl = '';
+  private webhookPath = '/api/n8n';
   private maxRetries = 2;
   private retryDelay = 1000;
 
@@ -11,7 +11,7 @@ export class N8nService {
 
   private async makeRequest(attempt: number = 1): Promise<Response> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
     try {
       const response = await fetch(`${this.baseUrl}${this.webhookPath}`, {
@@ -24,9 +24,14 @@ export class N8nService {
       });
 
       clearTimeout(timeoutId);
+      
+      console.log('n8n API response status:', response.status);
+      console.log('n8n API response headers:', Object.fromEntries(response.headers.entries()));
+      
       return response;
     } catch (error) {
       clearTimeout(timeoutId);
+      console.error('n8n API request failed:', error);
       
       if (attempt < this.maxRetries) {
         console.log(`n8n istek denemesi ${attempt} başarısız, ${this.retryDelay}ms sonra tekrar denenecek...`);
@@ -44,21 +49,23 @@ export class N8nService {
       
       const response = await this.makeRequest();
 
-      console.log('n8n API yanıt durumu:', response.status);
-      console.log('n8n API yanıt headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('n8n API error response:', errorText);
         return this.handleErrorResponse(response);
       }
 
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        console.warn('n8n API JSON olmayan yanıt döndürdü, fallback veriler kullanılacak');
+        const responseText = await response.text();
+        console.warn('n8n API JSON olmayan yanıt döndürdü:', responseText);
         return this.getFallbackData();
       }
 
       const rawData = await response.text();
       console.log('n8n API ham yanıt uzunluğu:', rawData.length);
+      console.log('n8n API ham yanıt (ilk 500 karakter):', rawData.substring(0, 500));
 
       if (!rawData || rawData.trim() === '') {
         console.warn('n8n API boş yanıt döndürdü, fallback veriler kullanılacak');
@@ -69,6 +76,12 @@ export class N8nService {
 
     } catch (error) {
       console.error('n8n API genel hatası:', error);
+      
+      // Daha detaylı hata bilgisi
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error('Network hatası: n8n sunucusuna bağlanılamıyor. localhost:5678 çalışıyor mu?');
+      }
+      
       return this.getFallbackData();
     }
   }
