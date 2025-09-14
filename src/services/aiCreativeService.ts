@@ -29,7 +29,7 @@ export interface AIGenerationResponse {
 }
 
 export class AICreativeService {
-  private baseUrl = '/api/ai-creative'; // Use Vite proxy
+  private baseUrl = '/api/ai-creative'; // Vite proxy to https://n8n.dezia.xyz/webhook/ai-visual-studio
   private maxRetries = 2;
   private retryDelay = 1000;
 
