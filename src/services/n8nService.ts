@@ -1,7 +1,7 @@
 // n8n API servisi
 export class N8nService {
   private baseUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://n8n.dezia.xyz';
-  private webhookPath = '/webhook-test/56c93b71-b493-432c-a7c0-4dea2bd97771';
+  private webhookPath = '/webhook/56c93b71-b493-432c-a7c0-4dea2bd97771';
   private maxRetries = 2;
   private retryDelay = 1000;
 
