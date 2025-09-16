@@ -228,6 +228,50 @@ const MetaAdsPublisher: React.FC = () => {
       return;
     }
 
+    try {
+      // Facebook Ads API'sine reklam gönder
+      const response = await fetch('/api/facebook-ads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          campaign_name: adForm.campaignName,
+          ad_name: adForm.adTitle,
+          target_audience: `${adForm.customAudience.ageMin}-${adForm.customAudience.ageMax} yaş, ${adForm.customAudience.interests.join(', ')}`,
+          budget: adForm.budget.amount,
+          duration: adForm.budget.duration,
+          creative_type: selectedCreative.type,
+          ad_text: adForm.adDescription,
+          headline: adForm.adTitle,
+          description: adForm.adDescription,
+          call_to_action: adForm.callToAction,
+          website_url: 'https://dezia.site',
+          image: selectedCreative.isUserUploaded ? {
+            filename: uploadedFile?.name || 'uploaded-image.jpg',
+            data: selectedCreative.url.split(',')[1], // base64 data
+            mimetype: uploadedFile?.type || 'image/jpeg'
+          } : {
+            filename: 'ai-generated-image.jpg',
+            data: selectedCreative.url, // AI generated URL
+            mimetype: 'image/jpeg'
+          }
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('✅ Reklam başarıyla Facebook\'a gönderildi!');
+        console.log('Facebook Ads Response:', result);
+      } else {
+        alert('❌ Reklam gönderimi başarısız: ' + result.message);
+        console.error('Facebook Ads Error:', result);
+      }
+    } catch (error) {
+      console.error('Facebook Ads API Error:', error);
+      alert('❌ Bağlantı hatası: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'));
+    }
     const newCampaign: AdCampaign = {
       id: Date.now().toString(),
       name: adForm.campaignName,

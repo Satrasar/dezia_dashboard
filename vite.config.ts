@@ -8,7 +8,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api/n8n': {
-        target: 'https://ozlemkumtas.app.n8n.cloud',
+        target: 'https://n8n.dezia.xyz',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/n8n/, '/webhook/56c93b71-b493-432c-a7c0-4dea2bd97771'),
         secure: true,
@@ -16,7 +16,7 @@ export default defineConfig({
         proxyTimeout: 30000,
       },
       '/api/n8n/automation': {
-        target: 'https://ozlemkumtas.app.n8n.cloud',
+        target: 'https://n8n.dezia.xyz',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/n8n\/automation/, '/webhook/automation-control'),
         secure: true,
@@ -24,7 +24,7 @@ export default defineConfig({
         proxyTimeout: 30000,
       },
       '/api/ai-creative': {
-        target: 'https://ozlemkumtas.app.n8n.cloud/webhook/ai-visual-studio',
+        target: 'https://n8n.dezia.xyz/webhook/ai-visual-studio',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/ai-creative/, ''),
         secure: true,
@@ -41,6 +41,14 @@ export default defineConfig({
             console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
           });
         }
+      },
+      '/api/facebook-ads': {
+        target: 'https://n8n.dezia.xyz/webhook/create-facebook-ad',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/facebook-ads/, ''),
+        secure: true,
+        timeout: 30000,
+        proxyTimeout: 30000,
       }
     }
   },
